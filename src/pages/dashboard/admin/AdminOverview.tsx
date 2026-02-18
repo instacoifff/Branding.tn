@@ -16,7 +16,7 @@ const AdminOverview = () => {
 
     useEffect(() => {
         const fetchAdminData = async () => {
-            // Fetch Projects
+            // Fetch recent projects
             const { data: projects, error: projectsError } = await supabase
                 .from('projects')
                 .select('*, profiles(full_name)')
@@ -25,15 +25,22 @@ const AdminOverview = () => {
 
             if (projectsError) console.error(projectsError);
 
-            // Fetch Stats (Mocked for now mostly, but projects count is real)
-            const { count: projectCount } = await supabase.from('projects').select('*', { count: 'exact', head: true });
-            // const { count: clientCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'client'); // Requires policy
+            // Fetch real counts
+            const [
+                { count: projectCount },
+                { count: clientCount },
+                { count: pendingCount },
+            ] = await Promise.all([
+                supabase.from('projects').select('*', { count: 'exact', head: true }),
+                supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'client'),
+                supabase.from('projects').select('*', { count: 'exact', head: true }).eq('status', 'onboarding'),
+            ]);
 
             setStats({
                 totalProjects: projectCount || 0,
-                activeClients: 0, // Needs DB policy update to count all profiles
-                totalRevenue: 12500, // Placeholder
-                pendingBriefs: 2 // Placeholder
+                activeClients: clientCount || 0,
+                totalRevenue: 12500, // Placeholder until a payments table exists
+                pendingBriefs: pendingCount || 0,
             });
 
             setRecentProjects(projects || []);

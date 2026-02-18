@@ -1,17 +1,72 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+type SelectedService = { id: string; title: string; price: number };
 
 const CreativeBrief = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form, setForm] = useState({ company: "", industry: "", description: "", audience: "", style: "", references: "" });
-  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+  const [loading, setLoading] = useState(false);
+  const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+  const [total, setTotal] = useState(0);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Read builder data from sessionStorage
+    const rawServices = sessionStorage.getItem("builder_services");
+    const rawTotal = sessionStorage.getItem("builder_total");
+    if (rawServices) setSelectedServices(JSON.parse(rawServices));
+    if (rawTotal) setTotal(Number(rawTotal));
+  }, []);
+
+  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+  const deposit = Math.round(total * 0.3);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+
+    if (!user) {
+      toast.error("You must be logged in to submit a brief.");
+      navigate("/auth");
+      return;
+    }
+
+    if (!form.company.trim()) {
+      toast.error("Please enter your company name.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("projects").insert({
+        client_id: user.id,
+        title: form.company.trim(),
+        services_selected: selectedServices,
+        total_price: total,
+        deposit_paid: false,
+        status: "onboarding",
+        current_stage: 1,
+      });
+
+      if (error) throw error;
+
+      // Clear sessionStorage after successful submission
+      sessionStorage.removeItem("builder_services");
+      sessionStorage.removeItem("builder_total");
+
+      toast.success("Brief submitted! Your project has been created. 🎉");
+      navigate("/dashboard");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to submit brief. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputClass =
@@ -29,6 +84,29 @@ const CreativeBrief = () => {
             <p className="text-muted-foreground text-sm">Tell us about your brand so we can start creating.</p>
           </motion.div>
 
+          {/* Selected services summary */}
+          {selectedServices.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6"
+            >
+              <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Your Package</p>
+              <div className="space-y-1">
+                {selectedServices.map((s) => (
+                  <div key={s.id} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{s.title}</span>
+                    <span className="font-medium">{s.price.toLocaleString()} TND</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-primary/20 mt-3 pt-3 flex justify-between text-sm font-semibold">
+                <span>Total</span>
+                <span>{total.toLocaleString()} TND</span>
+              </div>
+            </motion.div>
+          )}
+
           <motion.form
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -38,8 +116,8 @@ const CreativeBrief = () => {
           >
             <div className="grid md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium">Company Name</label>
-                <input value={form.company} onChange={(e) => update("company", e.target.value)} placeholder="Your Company" className={inputClass} />
+                <label className="text-sm font-medium">Company Name *</label>
+                <input required value={form.company} onChange={(e) => update("company", e.target.value)} placeholder="Your Company" className={inputClass} />
               </div>
               <div className="space-y-1.5">
                 <label className="text-sm font-medium">Industry</label>
@@ -69,6 +147,11 @@ const CreativeBrief = () => {
 
             <div className="border-t border-border pt-5">
               <h3 className="text-base font-semibold mb-3">Payment — 30% Deposit</h3>
+              {deposit > 0 && (
+                <p className="text-sm font-medium text-primary mb-3">
+                  Amount due: <span className="text-lg font-bold">{deposit.toLocaleString()} TND</span>
+                </p>
+              )}
               <div className="bg-muted rounded-xl p-4 mb-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Bank Transfer Details:</p>
                 <div className="space-y-1 text-sm">
@@ -80,9 +163,13 @@ const CreativeBrief = () => {
               <p className="text-xs text-muted-foreground">Complete your bank transfer and upload a receipt. Our team will confirm within 24 hours.</p>
             </div>
 
-            <button type="submit" className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-primary-foreground py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-brand">
-              Submit Brief & Continue
-              <ArrowRight size={16} />
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-primary-foreground py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-brand disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+              {loading ? "Submitting..." : "Submit Brief & Continue"}
             </button>
           </motion.form>
         </div>

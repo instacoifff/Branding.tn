@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Check, ArrowRight, Sparkles, Layers, Palette } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -51,6 +51,14 @@ const ProjectBuilder = () => {
 
   const total = services.filter((s) => selected.includes(s.id)).reduce((sum, s) => sum + s.price, 0);
   const deposit = Math.round(total * 0.3);
+  const navigate = useNavigate();
+
+  const handleStartProject = () => {
+    const selectedServices = services.filter((s) => selected.includes(s.id)).map(({ id, title, price }) => ({ id, title, price }));
+    sessionStorage.setItem("builder_services", JSON.stringify(selectedServices));
+    sessionStorage.setItem("builder_total", String(total));
+    navigate("/brief");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -78,11 +86,10 @@ const ProjectBuilder = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
                   onClick={() => toggle(service.id)}
-                  className={`relative text-left rounded-xl p-7 transition-all duration-200 border ${
-                    isSelected
+                  className={`relative text-left rounded-xl p-7 transition-all duration-200 border ${isSelected
                       ? "border-primary bg-primary/5 shadow-brand"
                       : "border-border bg-card hover:border-primary/20 shadow-soft hover:shadow-card"
-                  }`}
+                    }`}
                 >
                   {isSelected && (
                     <motion.div
@@ -147,13 +154,13 @@ const ProjectBuilder = () => {
                   </div>
                 </div>
 
-                <Link
-                  to="/auth"
+                <button
+                  onClick={handleStartProject}
                   className="mt-7 w-full flex items-center justify-center gap-2 bg-gradient-brand text-primary-foreground py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-brand"
                 >
                   Start Project
                   <ArrowRight size={16} />
-                </Link>
+                </button>
               </motion.div>
             )}
           </AnimatePresence>

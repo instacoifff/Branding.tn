@@ -1,13 +1,14 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js"; // Type-only import
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
-type Profile = {
+export type Profile = {
     id: string;
     full_name: string | null;
     role: "client" | "admin" | "creative" | null;
     company: string | null;
     avatar_url: string | null;
+    created_at?: string;
 };
 
 type AuthContextType = {
@@ -16,6 +17,11 @@ type AuthContextType = {
     profile: Profile | null;
     loading: boolean;
     signOut: () => Promise<void>;
+    signInWithEmail: (email: string, password: string) => Promise<void>;
+    signUpWithEmail: (email: string, password: string, fullName: string) => Promise<{ needsConfirmation: boolean }>;
+    signInWithGoogle: () => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
+    refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,7 +48,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
-
             if (session?.user) {
                 fetchProfile(session.user.id);
             } else {
@@ -74,6 +79,46 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const refreshProfile = async () => {
+        if (user) await fetchProfile(user.id);
+    };
+
+    const signInWithEmail = async (email: string, password: string) => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+    };
+
+    const signUpWithEmail = async (email: string, password: string, fullName: string) => {
+        const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: { full_name: fullName },
+            },
+        });
+        if (error) throw error;
+        // If session is null, email confirmation is required
+        return { needsConfirmation: !data.session };
+    };
+
+    const signInWithGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                queryParams: { access_type: "offline", prompt: "consent" },
+                redirectTo: `${window.location.origin}/dashboard`,
+            },
+        });
+        if (error) throw error;
+    };
+
+    const resetPassword = async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth?mode=reset`,
+        });
+        if (error) throw error;
+    };
+
     const signOut = async () => {
         await supabase.auth.signOut();
         setProfile(null);
@@ -82,7 +127,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+        <AuthContext.Provider value={{
+            user, session, profile, loading,
+            signOut, signInWithEmail, signUpWithEmail,
+            signInWithGoogle, resetPassword, refreshProfile,
+        }}>
             {children}
         </AuthContext.Provider>
     );

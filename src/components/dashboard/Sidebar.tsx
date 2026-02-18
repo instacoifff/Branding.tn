@@ -1,25 +1,27 @@
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut, Users, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
-
-const clientItems = [
-    { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
-    { icon: FolderKanban, label: "Projects", href: "/dashboard/projects" },
-    { icon: FileText, label: "Files", href: "/dashboard/files" },
-    { icon: Settings, label: "Settings", href: "/dashboard/settings" },
-];
-
-const adminItems = [
-    { icon: LayoutDashboard, label: "Admin Overview", href: "/dashboard/admin" },
-    { icon: FolderKanban, label: "All Projects", href: "/dashboard/admin/projects" },
-    { icon: Users, label: "Users", href: "/dashboard/admin/users" },
-    { icon: Shield, label: "Files Vault", href: "/dashboard/admin/files" },
-];
 
 const Sidebar = () => {
     const { pathname } = useLocation();
     const { signOut, profile } = useAuth();
+    const { t, lang, setLang } = useI18n();
+
+    const clientItems = [
+        { icon: LayoutDashboard, label: t("dashboard.overview"), href: "/dashboard" },
+        { icon: FolderKanban, label: t("dashboard.projects"), href: "/dashboard/projects" },
+        { icon: FileText, label: t("dashboard.files"), href: "/dashboard/files" },
+        { icon: Settings, label: t("dashboard.settings"), href: "/dashboard/settings" },
+    ];
+
+    const adminItems = [
+        { icon: LayoutDashboard, label: t("dashboard.adminOverview"), href: "/dashboard/admin" },
+        { icon: FolderKanban, label: t("dashboard.allProjects"), href: "/dashboard/admin/projects" },
+        { icon: Users, label: t("dashboard.users"), href: "/dashboard/admin/users" },
+        { icon: Shield, label: t("dashboard.filesVault"), href: "/dashboard/admin/files" },
+    ];
 
     const items = profile?.role === 'admin' ? adminItems : clientItems;
 
@@ -54,13 +56,31 @@ const Sidebar = () => {
                 })}
             </nav>
 
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border space-y-2">
+                {/* Language toggle */}
+                <div className="flex items-center gap-1 bg-muted rounded-lg p-1 mb-1">
+                    {(["fr", "en"] as const).map((l) => (
+                        <button
+                            key={l}
+                            onClick={() => setLang(l)}
+                            className={cn(
+                                "flex-1 py-1 rounded-md text-xs font-semibold uppercase transition-all",
+                                lang === l
+                                    ? "bg-background text-foreground shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            {l}
+                        </button>
+                    ))}
+                </div>
+
                 <button
                     onClick={() => signOut()}
                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full"
                 >
                     <LogOut size={18} />
-                    Sign Out
+                    {t("dashboard.signOut")}
                 </button>
             </div>
         </aside>
