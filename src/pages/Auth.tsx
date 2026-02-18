@@ -1,19 +1,79 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(isSignUp ? "/brief" : "/dashboard");
+    setLoading(true);
+
+    try {
+      if (isSignUp) {
+        // Sign Up Flow
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (authError) throw authError;
+
+        if (authData.user) {
+          // Create Profile
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              id: authData.user.id,
+              full_name: name,
+              role: "client", // Default role
+              // company: "", // Optional, can be added later
+            });
+
+          if (profileError) {
+            console.error("Error creating profile:", profileError);
+            toast.error("Account created, but failed to set up profile.");
+          } else {
+            toast.success("Account created successfully!");
+            navigate("/dashboard"); // Or /brief based on flow
+          }
+        }
+      } else {
+        // Sign In Flow
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        toast.success("Welcome back!");
+        navigate("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred during authentication.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputClass =
@@ -43,7 +103,14 @@ const Auth = () => {
                 <label className="text-sm font-medium text-foreground">Full Name</label>
                 <div className="relative">
                   <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="John Doe" className={inputClass} />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    className={inputClass}
+                    required
+                  />
                 </div>
               </div>
             )}
@@ -52,7 +119,14 @@ const Auth = () => {
               <label className="text-sm font-medium text-foreground">Email</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputClass} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className={inputClass}
+                  required
+                />
               </div>
             </div>
 
@@ -60,16 +134,30 @@ const Auth = () => {
               <label className="text-sm font-medium text-foreground">Password</label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className={inputClass}
+                  required
+                />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-primary-foreground py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-brand"
+              disabled={loading}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-primary-foreground py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-brand disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSignUp ? "Create Account" : "Sign In"}
-              <ArrowRight size={16} />
+              {loading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <>
+                  {isSignUp ? "Create Account" : "Sign In"}
+                  <ArrowRight size={16} />
+                </>
+              )}
             </button>
 
             <p className="text-center text-sm text-muted-foreground">
