@@ -34,28 +34,18 @@ const Auth = () => {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: name,
+            },
+          },
         });
 
         if (authError) throw authError;
 
         if (authData.user) {
-          // Create Profile
-          const { error: profileError } = await supabase
-            .from("profiles")
-            .insert({
-              id: authData.user.id,
-              full_name: name,
-              role: "client", // Default role
-              // company: "", // Optional, can be added later
-            });
-
-          if (profileError) {
-            console.error("Error creating profile:", profileError);
-            toast.error("Account created, but failed to set up profile.");
-          } else {
-            toast.success("Account created successfully!");
-            navigate("/dashboard"); // Or /brief based on flow
-          }
+          toast.success("Account created! Please check your email to verify your account.");
+          // Optional: Navigate to a "Check Email" page or stay here
         }
       } else {
         // Sign In Flow
