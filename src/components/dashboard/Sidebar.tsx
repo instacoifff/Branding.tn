@@ -1,18 +1,27 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut, Users, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
-const sidebarItems = [
+const clientItems = [
     { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
     { icon: FolderKanban, label: "Projects", href: "/dashboard/projects" },
     { icon: FileText, label: "Files", href: "/dashboard/files" },
     { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
 
+const adminItems = [
+    { icon: LayoutDashboard, label: "Admin Overview", href: "/dashboard/admin" },
+    { icon: FolderKanban, label: "All Projects", href: "/dashboard/admin/projects" },
+    { icon: Users, label: "Users", href: "/dashboard/admin/users" },
+    { icon: Shield, label: "Files Vault", href: "/dashboard/admin/files" },
+];
+
 const Sidebar = () => {
     const { pathname } = useLocation();
-    const { signOut } = useAuth();
+    const { signOut, profile } = useAuth();
+
+    const items = profile?.role === 'admin' ? adminItems : clientItems;
 
     return (
         <aside className="w-64 bg-card border-r border-border h-screen fixed left-0 top-0 z-30 flex flex-col">
@@ -24,7 +33,7 @@ const Sidebar = () => {
             </div>
 
             <nav className="flex-1 px-4 space-y-1.5 mt-4">
-                {sidebarItems.map((item) => {
+                {items.map((item) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
                     return (
