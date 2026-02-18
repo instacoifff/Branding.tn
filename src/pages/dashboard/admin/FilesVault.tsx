@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { FileText, Download, Trash2, Loader2, Shield, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n";
 
 type VaultFile = {
     id: string;
@@ -13,16 +14,17 @@ type VaultFile = {
     projects: { title: string; profiles: { full_name: string | null } | null } | null;
 };
 
-const typeConfig = {
-    concept: { label: "Concept", color: "bg-purple-500/10 text-purple-600" },
-    final: { label: "Final", color: "bg-green-500/10 text-green-600" },
-};
-
 const FilesVault = () => {
+    const { t } = useI18n();
     const [files, setFiles] = useState<VaultFile[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [deletingId, setDeletingId] = useState<string | null>(null);
+
+    const typeColors = {
+        concept: "bg-purple-500/10 text-purple-600",
+        final: "bg-green-500/10 text-green-600",
+    };
 
     const fetchFiles = async () => {
         const { data, error } = await supabase
@@ -32,25 +34,23 @@ const FilesVault = () => {
 
         if (error) {
             console.error("Error fetching files:", error);
-            toast.error("Failed to load files.");
+            toast.error(t("common.error"));
         } else {
             setFiles(data || []);
         }
         setLoading(false);
     };
 
-    useEffect(() => {
-        fetchFiles();
-    }, []);
+    useEffect(() => { fetchFiles(); }, []);
 
     const handleDelete = async (fileId: string) => {
-        if (!confirm("Are you sure you want to delete this file?")) return;
+        if (!confirm(t("dashboard.adminFiles.deleteConfirm"))) return;
         setDeletingId(fileId);
         const { error } = await supabase.from("files").delete().eq("id", fileId);
         if (error) {
-            toast.error("Failed to delete file: " + error.message);
+            toast.error(t("dashboard.adminFiles.errorDelete"));
         } else {
-            toast.success("File deleted.");
+            toast.success(t("dashboard.adminFiles.toastDeleted"));
             setFiles((prev) => prev.filter((f) => f.id !== fileId));
         }
         setDeletingId(null);
@@ -79,16 +79,14 @@ const FilesVault = () => {
                 className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
             >
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Files Vault</h1>
-                    <p className="text-muted-foreground mt-1">
-                        All files across every client project.
-                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.adminFiles.title")}</h1>
+                    <p className="text-muted-foreground mt-1">{t("dashboard.adminFiles.subtitle")}</p>
                 </div>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                     <input
                         type="text"
-                        placeholder="Search files, projects, clients..."
+                        placeholder={t("common.search")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-full md:w-72"
@@ -99,10 +97,7 @@ const FilesVault = () => {
             {filtered.length === 0 ? (
                 <div className="bg-card rounded-xl border border-border p-12 text-center">
                     <Shield size={40} className="mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Files Found</h3>
-                    <p className="text-muted-foreground text-sm">
-                        {search ? "Try a different search term." : "No files have been uploaded yet."}
-                    </p>
+                    <h3 className="text-lg font-semibold mb-2">{t("dashboard.adminFiles.noFiles")}</h3>
                 </div>
             ) : (
                 <motion.div
@@ -115,7 +110,7 @@ const FilesVault = () => {
                             <tr>
                                 <th className="px-6 py-4">File Name</th>
                                 <th className="px-6 py-4">Project</th>
-                                <th className="px-6 py-4">Client</th>
+                                <th className="px-6 py-4">{t("dashboard.adminProjects.client")}</th>
                                 <th className="px-6 py-4">Type</th>
                                 <th className="px-6 py-4">Uploaded</th>
                                 <th className="px-6 py-4 text-right">Actions</th>
@@ -123,7 +118,8 @@ const FilesVault = () => {
                         </thead>
                         <tbody className="divide-y divide-border">
                             {filtered.map((file) => {
-                                const type = typeConfig[file.type] ?? typeConfig.concept;
+                                const typeColor = typeColors[file.type] ?? typeColors.concept;
+                                const typeLabel = file.type === "concept" ? t("dashboard.adminProjectDetail.concept") : t("dashboard.adminProjectDetail.final");
                                 return (
                                     <tr key={file.id} className="hover:bg-muted/20 transition-colors">
                                         <td className="px-6 py-4">
@@ -132,15 +128,11 @@ const FilesVault = () => {
                                                 <span className="font-medium">{file.file_name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {file.projects?.title || "—"}
-                                        </td>
-                                        <td className="px-6 py-4 text-muted-foreground">
-                                            {file.projects?.profiles?.full_name || "—"}
-                                        </td>
+                                        <td className="px-6 py-4 text-muted-foreground">{file.projects?.title || "—"}</td>
+                                        <td className="px-6 py-4 text-muted-foreground">{file.projects?.profiles?.full_name || "—"}</td>
                                         <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${type.color}`}>
-                                                {type.label}
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${typeColor}`}>
+                                                {typeLabel}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-muted-foreground">
@@ -155,7 +147,7 @@ const FilesVault = () => {
                                                     className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
                                                 >
                                                     <Download size={14} />
-                                                    Download
+                                                    {t("common.download")}
                                                 </a>
                                                 {deletingId === file.id ? (
                                                     <Loader2 size={14} className="animate-spin text-destructive" />
@@ -165,7 +157,7 @@ const FilesVault = () => {
                                                         className="inline-flex items-center gap-1 text-destructive hover:underline font-medium"
                                                     >
                                                         <Trash2 size={14} />
-                                                        Delete
+                                                        {t("common.delete")}
                                                     </button>
                                                 )}
                                             </div>
@@ -176,7 +168,7 @@ const FilesVault = () => {
                         </tbody>
                     </table>
                     <div className="px-6 py-3 border-t border-border text-xs text-muted-foreground">
-                        {filtered.length} file{filtered.length !== 1 ? "s" : ""} found
+                        {filtered.length} {filtered.length !== 1 ? "files" : "file"}
                     </div>
                 </motion.div>
             )}

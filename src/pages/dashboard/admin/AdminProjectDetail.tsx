@@ -12,6 +12,7 @@ import {
     CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n";
 
 type Project = {
     id: string;
@@ -37,6 +38,7 @@ const stageLabels = ["Brief", "Concepts", "Refinement", "Finalisation", "Deliver
 const AdminProjectDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const { t } = useI18n();
 
     const [project, setProject] = useState<Project | null>(null);
     const [files, setFiles] = useState<FileRow[]>([]);
@@ -61,7 +63,7 @@ const AdminProjectDetail = () => {
                 .single();
 
             if (projErr || !proj) {
-                toast.error("Project not found.");
+                toast.error(t("common.error"));
                 navigate("/dashboard/admin/projects");
                 return;
             }
@@ -93,9 +95,9 @@ const AdminProjectDetail = () => {
             .eq("id", id);
 
         if (error) {
-            toast.error("Failed to save: " + error.message);
+            toast.error(t("dashboard.adminProjectDetail.errorSave"));
         } else {
-            toast.success("Project updated successfully.");
+            toast.success(t("dashboard.adminProjectDetail.toastSaved"));
             setProject((prev) => prev ? { ...prev, status, current_stage: stage, deposit_paid: depositPaid } : prev);
         }
         setSaving(false);
@@ -113,7 +115,7 @@ const AdminProjectDetail = () => {
             .upload(filePath, file);
 
         if (uploadError) {
-            toast.error("Upload failed: " + uploadError.message);
+            toast.error(t("dashboard.adminProjectDetail.errorUpload"));
             setUploading(false);
             return;
         }
@@ -130,9 +132,9 @@ const AdminProjectDetail = () => {
             .single();
 
         if (insertError) {
-            toast.error("Failed to save file record: " + insertError.message);
+            toast.error(t("dashboard.adminProjectDetail.errorUpload"));
         } else {
-            toast.success(`${fileType === "concept" ? "Concept" : "Final"} file uploaded.`);
+            toast.success(t("dashboard.adminProjectDetail.toastUploaded"));
             setFiles((prev) => [newFile, ...prev]);
         }
         setUploading(false);
@@ -140,13 +142,13 @@ const AdminProjectDetail = () => {
     };
 
     const handleDeleteFile = async (fileId: string) => {
-        if (!confirm("Delete this file?")) return;
+        if (!confirm(t("dashboard.adminProjectDetail.deleteConfirm"))) return;
         setDeletingFileId(fileId);
         const { error } = await supabase.from("files").delete().eq("id", fileId);
         if (error) {
-            toast.error("Failed to delete: " + error.message);
+            toast.error(t("dashboard.adminProjectDetail.errorDelete"));
         } else {
-            toast.success("File deleted.");
+            toast.success(t("dashboard.adminProjectDetail.toastDeleted"));
             setFiles((prev) => prev.filter((f) => f.id !== fileId));
         }
         setDeletingFileId(null);
@@ -173,7 +175,7 @@ const AdminProjectDetail = () => {
                     className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
                 >
                     <ArrowLeft size={15} />
-                    Back to All Projects
+                    {t("dashboard.adminProjectDetail.back")}
                 </Link>
                 <div className="flex items-start justify-between gap-4">
                     <div>
@@ -191,7 +193,7 @@ const AdminProjectDetail = () => {
                         className="flex items-center gap-2 bg-gradient-brand text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all shadow-brand disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-                        Save Changes
+                        {saving ? t("dashboard.adminProjectDetail.saving") : t("dashboard.adminProjectDetail.saveChanges")}
                     </button>
                 </div>
             </motion.div>
@@ -201,21 +203,21 @@ const AdminProjectDetail = () => {
                 <div className="lg:col-span-1 space-y-5">
                     {/* Status */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card rounded-xl border border-border p-5 shadow-sm">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Project Status</h2>
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t("dashboard.adminProjectDetail.status")}</h2>
                         <select
                             value={status}
                             onChange={(e) => setStatus(e.target.value as Project["status"])}
                             className="w-full px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                         >
-                            <option value="onboarding">Onboarding</option>
-                            <option value="active">Active</option>
-                            <option value="completed">Completed</option>
+                            <option value="onboarding">{t("dashboard.status.onboarding")}</option>
+                            <option value="active">{t("dashboard.status.active")}</option>
+                            <option value="completed">{t("dashboard.status.completed")}</option>
                         </select>
                     </motion.div>
 
                     {/* Stage */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.05 } }} className="bg-card rounded-xl border border-border p-5 shadow-sm">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Current Stage</h2>
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t("dashboard.adminProjectDetail.stage")}</h2>
                         <div className="space-y-2">
                             {stageLabels.map((label, idx) => (
                                 <button
@@ -257,7 +259,7 @@ const AdminProjectDetail = () => {
                                     }`}
                             >
                                 <CheckCircle2 size={13} />
-                                {depositPaid ? "Paid" : "Mark Paid"}
+                                {depositPaid ? t("dashboard.adminProjectDetail.yes") : t("dashboard.adminProjectDetail.depositPaid")}
                             </button>
                         </div>
                     </motion.div>
@@ -267,17 +269,17 @@ const AdminProjectDetail = () => {
                 <div className="lg:col-span-2 space-y-5">
                     {/* Upload */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.05 } }} className="bg-card rounded-xl border border-border p-5 shadow-sm">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Upload Files</h2>
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t("dashboard.adminProjectDetail.uploadFile")}</h2>
                         <div className="grid grid-cols-2 gap-3">
                             <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
                                 <Upload size={20} className="text-muted-foreground" />
-                                <span className="text-sm font-medium">Upload Concept</span>
+                                <span className="text-sm font-medium">{t("dashboard.adminProjectDetail.concept")}</span>
                                 <span className="text-xs text-muted-foreground">PNG, PDF, AI, etc.</span>
                                 <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, "concept")} disabled={uploading} />
                             </label>
                             <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
                                 <Upload size={20} className="text-muted-foreground" />
-                                <span className="text-sm font-medium">Upload Final</span>
+                                <span className="text-sm font-medium">{t("dashboard.adminProjectDetail.final")}</span>
                                 <span className="text-xs text-muted-foreground">PNG, PDF, AI, etc.</span>
                                 <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, "final")} disabled={uploading} />
                             </label>
@@ -285,7 +287,7 @@ const AdminProjectDetail = () => {
                         {uploading && (
                             <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
                                 <Loader2 size={14} className="animate-spin" />
-                                Uploading...
+                                {t("dashboard.adminProjectDetail.uploading")}
                             </div>
                         )}
                     </motion.div>
@@ -293,10 +295,10 @@ const AdminProjectDetail = () => {
                     {/* File List */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.1 } }} className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-border">
-                            <h2 className="text-sm font-semibold">Project Files ({files.length})</h2>
+                            <h2 className="text-sm font-semibold">{t("dashboard.adminProjectDetail.files")} ({files.length})</h2>
                         </div>
                         {files.length === 0 ? (
-                            <div className="p-8 text-center text-muted-foreground text-sm">No files uploaded yet.</div>
+                            <div className="p-8 text-center text-muted-foreground text-sm">{t("dashboard.adminProjectDetail.noFiles")}</div>
                         ) : (
                             <div className="divide-y divide-border">
                                 {files.map((file) => (

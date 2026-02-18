@@ -2,11 +2,13 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useI18n } from "@/i18n";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const isDashboard = location.pathname.startsWith("/dashboard");
+  const { t, lang, setLang } = useI18n();
 
   return (
     <motion.nav
@@ -29,32 +31,47 @@ const Navbar = () => {
           {!isDashboard && (
             <>
               <Link to="/builder" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Services
+                {t("nav.services")}
               </Link>
               <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Sign In
+                {t("nav.signIn")}
               </Link>
               <Link
                 to="/builder"
                 className="text-sm bg-gradient-brand text-primary-foreground px-5 py-2 rounded-lg hover:opacity-90 transition-opacity shadow-brand"
               >
-                Start a Project
+                {t("nav.startProject")}
               </Link>
             </>
           )}
           {isDashboard && (
             <>
               <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Overview
+                {t("nav.overview")}
               </Link>
               <Link to="/dashboard/files" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Files
+                {t("nav.files")}
               </Link>
               <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Logout
+                {t("nav.logout")}
               </Link>
             </>
           )}
+          {/* Language toggle */}
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              onClick={() => setLang("fr")}
+              className={`text-xs px-2 py-1 rounded transition-colors ${lang === "fr" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              FR
+            </button>
+            <button
+              onClick={() => setLang("en")}
+              className={`text-xs px-2 py-1 rounded transition-colors ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              EN
+            </button>
+          </div>
         </div>
 
         <button
@@ -73,18 +90,22 @@ const Navbar = () => {
           className="md:hidden bg-background border-b border-border px-6 py-4 space-y-3"
         >
           <Link to="/builder" onClick={() => setIsOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground">
-            Services
+            {t("nav.services")}
           </Link>
           <Link to="/auth" onClick={() => setIsOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground">
-            Sign In
+            {t("nav.signIn")}
           </Link>
           <Link
             to="/builder"
             onClick={() => setIsOpen(false)}
             className="block text-sm bg-gradient-brand text-primary-foreground px-4 py-2 rounded-lg text-center"
           >
-            Start a Project
+            {t("nav.startProject")}
           </Link>
+          <div className="flex items-center gap-2 pt-1">
+            <button onClick={() => setLang("fr")} className={`text-xs px-2 py-1 rounded ${lang === "fr" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>FR</button>
+            <button onClick={() => setLang("en")} className={`text-xs px-2 py-1 rounded ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>EN</button>
+          </div>
         </motion.div>
       )}
     </motion.nav>

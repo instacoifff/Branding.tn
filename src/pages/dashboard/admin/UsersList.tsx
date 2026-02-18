@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { Users, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
+import { useI18n } from "@/i18n";
 
 type Profile = {
     id: string;
@@ -13,13 +14,14 @@ type Profile = {
     created_at: string;
 };
 
-const roleConfig = {
+const roleColors = {
     client: "bg-blue-500/10 text-blue-600",
     admin: "bg-red-500/10 text-red-600",
     creative: "bg-purple-500/10 text-purple-600",
 };
 
 const UsersList = () => {
+    const { t } = useI18n();
     const [users, setUsers] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -33,16 +35,14 @@ const UsersList = () => {
 
         if (error) {
             console.error("Error fetching users:", error);
-            toast.error("Failed to load users. Check RLS policies.");
+            toast.error(t("common.error"));
         } else {
             setUsers(data || []);
         }
         setLoading(false);
     };
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+    useEffect(() => { fetchUsers(); }, []);
 
     const handleRoleChange = async (userId: string, newRole: string) => {
         setUpdatingId(userId);
@@ -52,9 +52,9 @@ const UsersList = () => {
             .eq("id", userId);
 
         if (error) {
-            toast.error("Failed to update role: " + error.message);
+            toast.error(t("dashboard.adminUsers.errorRoleUpdate"));
         } else {
-            toast.success("Role updated successfully.");
+            toast.success(t("dashboard.adminUsers.toastRoleUpdated"));
             setUsers((prev) =>
                 prev.map((u) => (u.id === userId ? { ...u, role: newRole as Profile["role"] } : u))
             );
@@ -84,16 +84,14 @@ const UsersList = () => {
                 className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
             >
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Manage all registered clients and team members.
-                    </p>
+                    <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.adminUsers.title")}</h1>
+                    <p className="text-muted-foreground mt-1">{t("dashboard.adminUsers.subtitle")}</p>
                 </div>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
                     <input
                         type="text"
-                        placeholder="Search by name or company..."
+                        placeholder={t("dashboard.adminUsers.search")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9 pr-4 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-full md:w-72"
@@ -104,10 +102,7 @@ const UsersList = () => {
             {filtered.length === 0 ? (
                 <div className="bg-card rounded-xl border border-border p-12 text-center">
                     <Users size={40} className="mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No Users Found</h3>
-                    <p className="text-muted-foreground text-sm">
-                        {search ? "Try a different search term." : "No users have registered yet."}
-                    </p>
+                    <h3 className="text-lg font-semibold mb-2">{t("dashboard.adminUsers.noUsers")}</h3>
                 </div>
             ) : (
                 <motion.div
@@ -120,8 +115,8 @@ const UsersList = () => {
                             <tr>
                                 <th className="px-6 py-4">User</th>
                                 <th className="px-6 py-4">Company</th>
-                                <th className="px-6 py-4">Role</th>
-                                <th className="px-6 py-4">Joined</th>
+                                <th className="px-6 py-4">{t("dashboard.adminUsers.role")}</th>
+                                <th className="px-6 py-4">{t("dashboard.adminUsers.joined")}</th>
                                 <th className="px-6 py-4 text-right">Change Role</th>
                             </tr>
                         </thead>
@@ -131,11 +126,7 @@ const UsersList = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             {user.avatar_url ? (
-                                                <img
-                                                    src={user.avatar_url}
-                                                    alt={user.full_name || ""}
-                                                    className="w-8 h-8 rounded-full object-cover"
-                                                />
+                                                <img src={user.avatar_url} alt={user.full_name || ""} className="w-8 h-8 rounded-full object-cover" />
                                             ) : (
                                                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
                                                     {user.full_name?.[0]?.toUpperCase() || "?"}
@@ -146,11 +137,8 @@ const UsersList = () => {
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground">{user.company || "—"}</td>
                                     <td className="px-6 py-4">
-                                        <span
-                                            className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${roleConfig[user.role] || roleConfig.client
-                                                }`}
-                                        >
-                                            {user.role}
+                                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${roleColors[user.role] || roleColors.client}`}>
+                                            {t(`dashboard.adminUsers.roles.${user.role}`) || user.role}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-muted-foreground">
@@ -165,9 +153,9 @@ const UsersList = () => {
                                                 onChange={(e) => handleRoleChange(user.id, e.target.value)}
                                                 className="px-2 py-1 border border-border rounded-lg bg-background text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
                                             >
-                                                <option value="client">Client</option>
-                                                <option value="admin">Admin</option>
-                                                <option value="creative">Creative</option>
+                                                <option value="client">{t("dashboard.adminUsers.roles.client")}</option>
+                                                <option value="admin">{t("dashboard.adminUsers.roles.admin")}</option>
+                                                <option value="creative">{t("dashboard.adminUsers.roles.creative")}</option>
                                             </select>
                                         )}
                                     </td>
@@ -176,7 +164,7 @@ const UsersList = () => {
                         </tbody>
                     </table>
                     <div className="px-6 py-3 border-t border-border text-xs text-muted-foreground">
-                        {filtered.length} user{filtered.length !== 1 ? "s" : ""} found
+                        {filtered.length} {filtered.length !== 1 ? "users" : "user"}
                     </div>
                 </motion.div>
             )}

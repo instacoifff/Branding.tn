@@ -69,28 +69,34 @@ const Auth = () => {
     try {
       if (mode === "signup") {
         if (password.length < 8) {
-          toast.error("Password must be at least 8 characters.");
+          toast.error(t("auth.errorWeakPassword"));
+          setLoading(false);
           return;
         }
         const { needsConfirmation } = await signUpWithEmail(email, password, name);
         if (needsConfirmation) {
           setConfirmEmail(true);
-          toast.success(t("auth.accountCreated"));
+          toast.success(t("auth.toastAccountCreated"));
         } else {
-          toast.success(t("auth.accountCreated"));
+          toast.success(t("auth.toastAccountCreated"));
           navigate("/dashboard");
         }
       } else if (mode === "signin") {
         await signInWithEmail(email, password);
-        toast.success(t("auth.welcomeToast"));
+        toast.success(t("auth.toastWelcome"));
         navigate("/dashboard");
       } else if (mode === "forgot") {
+        if (!email) {
+          toast.error(t("auth.errorEnterEmail"));
+          setLoading(false);
+          return;
+        }
         await resetPassword(email);
         goTo("reset-sent");
-        toast.success(t("auth.resetSent"));
+        toast.success(t("auth.toastResetSent"));
       }
     } catch (err: any) {
-      toast.error(err.message || "An error occurred.");
+      toast.error(err.message || t("auth.errorGeneric"));
     } finally {
       setLoading(false);
     }
@@ -152,8 +158,8 @@ const Auth = () => {
               key={l}
               onClick={() => setLang(l)}
               className={`px-3 py-1 rounded-md text-xs font-semibold uppercase transition-all ${lang === l
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               {l}
@@ -320,8 +326,8 @@ const Auth = () => {
                             <p className="text-xs text-muted-foreground">
                               {t("auth.passwordStrength")}:{" "}
                               <span className={`font-medium ${pwStrength.score <= 1 ? "text-red-500" :
-                                  pwStrength.score === 2 ? "text-orange-400" :
-                                    pwStrength.score === 3 ? "text-yellow-500" : "text-green-500"
+                                pwStrength.score === 2 ? "text-orange-400" :
+                                  pwStrength.score === 3 ? "text-yellow-500" : "text-green-500"
                                 }`}>
                                 {t(`auth.${pwStrength.label}`)}
                               </span>
