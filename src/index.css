@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
+
+    --primary: 270 80% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 30% 96%;
+    --secondary-foreground: 270 20% 30%;
+
+    --muted: 240 10% 96%;
+    --muted-foreground: 240 5% 46%;
+
+    --accent: 270 30% 96%;
+    --accent-foreground: 270 20% 30%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 270 80% 60%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 270 30% 98%;
+    --sidebar-foreground: 240 10% 30%;
+    --sidebar-primary: 270 80% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 30% 95%;
+    --sidebar-accent-foreground: 270 20% 30%;
+    --sidebar-border: 240 6% 92%;
+    --sidebar-ring: 270 80% 60%;
+
+    /* Custom tokens */
+    --gradient-start: 270 80% 60%;
+    --gradient-end: 330 80% 60%;
+    --surface: 270 20% 98%;
+    --surface-hover: 270 20% 95%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(270 80% 60%), hsl(330 80% 60%));
+  }
+
+  .bg-gradient-brand {
+    background-image: linear-gradient(135deg, hsl(270 80% 60%), hsl(330 80% 60%));
+  }
+
+  .bg-gradient-brand-subtle {
+    background-image: linear-gradient(135deg, hsl(270 80% 60% / 0.08), hsl(330 80% 60% / 0.08));
+  }
+
+  .shadow-brand {
+    box-shadow: 0 4px 24px -4px hsl(270 80% 60% / 0.25);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.05), 0 1px 2px -1px hsl(0 0% 0% / 0.05);
+  }
+
+  .shadow-card {
+    box-shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.04), 0 4px 16px -2px hsl(0 0% 0% / 0.06);
+  }
+
+  .card-hover {
+    @apply bg-card rounded-xl border border-border shadow-soft transition-all duration-200;
+  }
+  .card-hover:hover {
+    @apply shadow-card border-primary/20;
+    transform: translateY(-2px);
+  }
+}
