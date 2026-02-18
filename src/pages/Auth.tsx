@@ -43,9 +43,13 @@ const Auth = () => {
 
         if (authError) throw authError;
 
-        if (authData.user) {
+        if (authData.session) {
+          // Email confirmation is OFF — user is logged in immediately
+          toast.success("Account created! Welcome to Branding.tn 🎉");
+          navigate("/dashboard");
+        } else if (authData.user) {
+          // Email confirmation is ON — ask user to check email
           toast.success("Account created! Please check your email to verify your account.");
-          // Optional: Navigate to a "Check Email" page or stay here
         }
       } else {
         // Sign In Flow
