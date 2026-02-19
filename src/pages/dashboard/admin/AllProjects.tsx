@@ -67,7 +67,7 @@ const AllProjects = () => {
                         onChange={(e) => setFilter(e.target.value)}
                         className="px-3 py-2 border border-border rounded-lg bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     >
-                        <option value="all">All</option>
+                        <option value="all">{t("dashboard.status.all") || "All"}</option>
                         <option value="active">{t("dashboard.status.active")}</option>
                         <option value="completed">{t("dashboard.status.completed")}</option>
                         <option value="onboarding">{t("dashboard.status.onboarding")}</option>
@@ -84,12 +84,12 @@ const AllProjects = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
                             <tr>
-                                <th className="px-6 py-4">Project</th>
+                                <th className="px-6 py-4">{t("dashboard.adminProjects.project")}</th>
                                 <th className="px-6 py-4">{t("dashboard.adminProjects.client")}</th>
-                                <th className="px-6 py-4">Status</th>
+                                <th className="px-6 py-4">{t("dashboard.adminProjects.status")}</th>
                                 <th className="px-6 py-4">{t("dashboard.adminProjectDetail.stage")}</th>
-                                <th className="px-6 py-4">Created</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4">{t("dashboard.adminProjects.created")}</th>
+                                <th className="px-6 py-4 text-right">{t("dashboard.adminProjects.actions")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -108,7 +108,7 @@ const AllProjects = () => {
                                     <td className="px-6 py-4 text-muted-foreground">{new Date(project.created_at).toLocaleDateString()}</td>
                                     <td className="px-6 py-4 text-right">
                                         <Link to={`/dashboard/admin/projects/${project.id}`} className="text-primary hover:underline font-medium">
-                                            Edit
+                                            {t("dashboard.adminProjects.edit")}
                                         </Link>
                                     </td>
                                 </tr>

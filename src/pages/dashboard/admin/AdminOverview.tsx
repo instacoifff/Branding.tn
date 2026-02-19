@@ -106,7 +106,7 @@ const AdminOverview = () => {
                                         {t(`dashboard.status.${project.status}`) || project.status}
                                     </span>
                                     <Link to={`/dashboard/admin/projects/${project.id}`} className="text-sm font-medium border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition-colors">
-                                        {t("dashboard.adminProjectDetail.saveChanges")}
+                                        {t("dashboard.adminProjectDetail.viewProject")}
                                     </Link>
                                 </div>
                             </div>

@@ -113,11 +113,11 @@ const UsersList = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
                             <tr>
-                                <th className="px-6 py-4">User</th>
-                                <th className="px-6 py-4">Company</th>
+                                <th className="px-6 py-4">{t("dashboard.adminUsers.user")}</th>
+                                <th className="px-6 py-4">{t("dashboard.adminUsers.company")}</th>
                                 <th className="px-6 py-4">{t("dashboard.adminUsers.role")}</th>
                                 <th className="px-6 py-4">{t("dashboard.adminUsers.joined")}</th>
-                                <th className="px-6 py-4 text-right">Change Role</th>
+                                <th className="px-6 py-4 text-right">{t("dashboard.adminUsers.changeRole")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -164,7 +164,7 @@ const UsersList = () => {
                         </tbody>
                     </table>
                     <div className="px-6 py-3 border-t border-border text-xs text-muted-foreground">
-                        {filtered.length} {filtered.length !== 1 ? "users" : "user"}
+                        {filtered.length} {filtered.length !== 1 ? t("dashboard.adminUsers.countUsers") : t("dashboard.adminUsers.countUser")}
                     </div>
                 </motion.div>
             )}

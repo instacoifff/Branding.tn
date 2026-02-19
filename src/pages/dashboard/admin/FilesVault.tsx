@@ -108,12 +108,12 @@ const FilesVault = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
                             <tr>
-                                <th className="px-6 py-4">File Name</th>
-                                <th className="px-6 py-4">Project</th>
+                                <th className="px-6 py-4">{t("dashboard.adminFiles.fileName")}</th>
+                                <th className="px-6 py-4">{t("dashboard.adminFiles.project")}</th>
                                 <th className="px-6 py-4">{t("dashboard.adminProjects.client")}</th>
-                                <th className="px-6 py-4">Type</th>
-                                <th className="px-6 py-4">Uploaded</th>
-                                <th className="px-6 py-4 text-right">Actions</th>
+                                <th className="px-6 py-4">{t("dashboard.adminFiles.type")}</th>
+                                <th className="px-6 py-4">{t("dashboard.adminFiles.uploaded")}</th>
+                                <th className="px-6 py-4 text-right">{t("dashboard.adminProjects.actions")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -168,7 +168,7 @@ const FilesVault = () => {
                         </tbody>
                     </table>
                     <div className="px-6 py-3 border-t border-border text-xs text-muted-foreground">
-                        {filtered.length} {filtered.length !== 1 ? "files" : "file"}
+                        {filtered.length} {filtered.length !== 1 ? t("dashboard.adminFiles.countFiles") : t("dashboard.adminFiles.countFile")}
                     </div>
                 </motion.div>
             )}

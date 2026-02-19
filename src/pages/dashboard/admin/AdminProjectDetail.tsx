@@ -181,7 +181,7 @@ const AdminProjectDetail = () => {
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">{project.title}</h1>
                         <p className="text-muted-foreground mt-1">
-                            Client: <span className="text-foreground font-medium">{project.profiles?.full_name || "Unknown"}</span>
+                            {t("dashboard.adminProjectDetail.client")}: <span className="text-foreground font-medium">{project.profiles?.full_name || "Unknown"}</span>
                             {project.profiles?.company && (
                                 <> · <span>{project.profiles.company}</span></>
                             )}
@@ -241,17 +241,17 @@ const AdminProjectDetail = () => {
                             <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
                                 <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${progressPct}%` }} />
                             </div>
-                            <p className="text-xs text-muted-foreground mt-1.5">{Math.round(progressPct)}% complete</p>
+                            <p className="text-xs text-muted-foreground mt-1.5">{Math.round(progressPct)}% {t("dashboard.adminProjectDetail.complete")}</p>
                         </div>
                     </motion.div>
 
                     {/* Deposit */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.1 } }} className="bg-card rounded-xl border border-border p-5 shadow-sm">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Payment</h2>
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">{t("dashboard.adminProjectDetail.payment")}</h2>
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium">Total: {project.total_price.toLocaleString()} TND</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">Deposit (30%): {(project.total_price * 0.3).toLocaleString()} TND</p>
+                                <p className="text-sm font-medium">{t("dashboard.adminProjectDetail.total")}: {project.total_price.toLocaleString()} TND</p>
+                                <p className="text-xs text-muted-foreground mt-0.5">{t("dashboard.adminProjectDetail.deposit30")}: {(project.total_price * 0.3).toLocaleString()} TND</p>
                             </div>
                             <button
                                 onClick={() => setDepositPaid(!depositPaid)}
@@ -259,7 +259,7 @@ const AdminProjectDetail = () => {
                                     }`}
                             >
                                 <CheckCircle2 size={13} />
-                                {depositPaid ? t("dashboard.adminProjectDetail.yes") : t("dashboard.adminProjectDetail.depositPaid")}
+                                {depositPaid ? t("dashboard.adminProjectDetail.depositPaidLabel") : t("dashboard.adminProjectDetail.depositPaid")}
                             </button>
                         </div>
                     </motion.div>
@@ -316,7 +316,7 @@ const AdminProjectDetail = () => {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <a href={file.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-medium">
-                                                Download
+                                                {t("dashboard.adminProjectDetail.download")}
                                             </a>
                                             {deletingFileId === file.id ? (
                                                 <Loader2 size={13} className="animate-spin text-destructive" />
