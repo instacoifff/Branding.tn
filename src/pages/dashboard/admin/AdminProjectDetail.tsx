@@ -8,10 +8,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/i18n";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type Project = {
     id: string; title: string; status: "onboarding" | "active" | "completed";
     current_stage: number; total_price: number; deposit_paid: boolean;
+    client_id: string;
     created_at: string; services_selected?: any[];
     profiles: { full_name: string | null; company: string | null } | null;
 };
@@ -69,7 +75,8 @@ const AdminProjectDetail = () => {
                 ]);
 
             if (projErr || !proj) { toast.error(t("common.error")); navigate("/dashboard/admin/projects"); return; }
-            setProject(proj); setStatus(proj.status); setStage(proj.current_stage); setDepositPaid(proj.deposit_paid);
+            // client_id comes from the project row itself — no secondary lookup needed
+            setProject(proj as Project); setStatus(proj.status); setStage(proj.current_stage); setDepositPaid(proj.deposit_paid);
             setFiles(fileData ?? []); setTasks(taskData ?? []); setTeamMembers(teamData ?? []);
             setLoading(false);
         };
@@ -90,24 +97,20 @@ const AdminProjectDetail = () => {
             toast.success(t("dashboard.adminProjectDetail.toastSaved"));
             setProject((prev) => prev ? { ...prev, status, current_stage: stage, deposit_paid: depositPaid } : prev);
 
-            // Insert notifications for client (best-effort)
-            if (project?.profiles) {
-                const { data: clientProf } = await supabase
-                    .from("profiles")
-                    .select("id")
-                    .eq("full_name", project.profiles.full_name)
-                    .single();
-                if (clientProf) {
+            // Use client_id directly from the project row — reliable, no secondary lookup
+            if (project?.client_id) {
+                try {
                     await supabase.from("notifications").insert({
-                        user_id: clientProf.id,
+                        user_id: project.client_id,
                         title: `Your project "${project.title}" has been updated`,
                         body: `Status: ${status} · Stage: ${stage}/5`,
                     });
-                }
+                } catch { /* non-critical — don't block save */ }
             }
         }
         setSaving(false);
     };
+
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, fileType: "concept" | "final") => {
         const file = e.target.files?.[0];
@@ -126,7 +129,6 @@ const AdminProjectDetail = () => {
     };
 
     const handleDeleteFile = async (fileId: string) => {
-        if (!confirm(t("dashboard.adminProjectDetail.deleteConfirm"))) return;
         setDeletingFileId(fileId);
         const { error } = await supabase.from("files").delete().eq("id", fileId);
         if (error) toast.error(t("dashboard.adminProjectDetail.errorDelete"));
@@ -158,10 +160,10 @@ const AdminProjectDetail = () => {
     };
 
     const handleDeleteTask = async (taskId: string) => {
-        if (!confirm("Delete this task?")) return;
         setDeletingTaskId(taskId);
-        await supabase.from("tasks").delete().eq("id", taskId);
-        setTasks((prev) => prev.filter((t) => t.id !== taskId));
+        const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+        if (error) toast.error(t("common.error"));
+        else setTasks((prev) => prev.filter((t) => t.id !== taskId));
         setDeletingTaskId(null);
     };
 
@@ -297,9 +299,23 @@ const AdminProjectDetail = () => {
                                         {deletingTaskId === task.id ? (
                                             <Loader2 size={13} className="animate-spin text-destructive" />
                                         ) : (
-                                            <button onClick={() => handleDeleteTask(task.id)} className="shrink-0 text-muted-foreground hover:text-destructive transition-colors">
-                                                <Trash2 size={13} />
-                                            </button>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <button className="shrink-0 text-muted-foreground hover:text-destructive transition-colors">
+                                                        <Trash2 size={13} />
+                                                    </button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Delete task?</AlertDialogTitle>
+                                                        <AlertDialogDescription>This will permanently remove "{task.title}". This cannot be undone.</AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDeleteTask(task.id)} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         )}
                                     </div>
                                 ))}
@@ -355,9 +371,23 @@ const AdminProjectDetail = () => {
                                             {deletingFileId === file.id ? (
                                                 <Loader2 size={13} className="animate-spin text-destructive" />
                                             ) : (
-                                                <button onClick={() => handleDeleteFile(file.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                                                    <Trash2 size={13} />
-                                                </button>
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <button className="text-muted-foreground hover:text-destructive transition-colors">
+                                                            <Trash2 size={13} />
+                                                        </button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Delete file?</AlertDialogTitle>
+                                                            <AlertDialogDescription>Permanently delete "{file.file_name}"? This cannot be undone.</AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction onClick={() => handleDeleteFile(file.id)} className="bg-destructive hover:bg-destructive/90 text-white">Delete</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
                                             )}
                                         </div>
                                     </div>
