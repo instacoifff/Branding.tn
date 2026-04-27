@@ -19,6 +19,7 @@ type Project = {
     deposit_paid: boolean;
     created_at: string;
     updated_at: string;
+    services_selected?: { id: string; title: string; price: number }[];
 };
 
 type FileRow = {
@@ -187,6 +188,22 @@ const ProjectDetail = () => {
                             </div>
                         </div>
                     </motion.div>
+
+                    {/* Services ordered */}
+                    {project.services_selected && project.services_selected.length > 0 && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                            className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden p-6 mt-6">
+                            <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">{t("brief.yourPackage") || "Services Ordered"}</h2>
+                            <div className="space-y-2">
+                                {project.services_selected.map(service => (
+                                    <div key={service.id} className="flex justify-between items-center text-sm border-b border-border pb-2 last:border-0 last:pb-0">
+                                        <span className="font-medium">{service.title}</span>
+                                        <span className="text-muted-foreground">{service.price.toLocaleString()} TND</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
 
                     {/* Tasks card — read-only for client */}
                     {tasks.length > 0 && (

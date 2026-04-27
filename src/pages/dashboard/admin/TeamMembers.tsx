@@ -4,6 +4,17 @@ import { supabase } from "@/lib/supabase";
 import { Users, Plus, Edit2, Trash2, Loader2, X, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/i18n";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 type TeamMember = {
     id: string;
@@ -68,7 +79,6 @@ const TeamMembers = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Delete this team member?")) return;
         setDeletingId(id);
         const { error } = await supabase.from("team_members").delete().eq("id", id);
         if (error) toast.error(t("common.error"));
@@ -139,9 +149,25 @@ const TeamMembers = () => {
                                 {deletingId === m.id ? (
                                     <Loader2 size={14} className="animate-spin text-destructive ml-2 self-center" />
                                 ) : (
-                                    <button onClick={() => handleDelete(m.id)} className="flex items-center gap-1.5 text-xs font-medium text-destructive border border-destructive/20 px-3 py-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
-                                        <Trash2 size={12} /> Delete
-                                    </button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <button className="flex items-center gap-1.5 text-xs font-medium text-destructive border border-destructive/20 px-3 py-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
+                                                <Trash2 size={12} /> Delete
+                                            </button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    This will permanently delete the team member.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(m.id)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 )}
                             </div>
                         </motion.div>
