@@ -202,4 +202,138 @@
     background-image: radial-gradient(circle, rgba(139, 92, 246, 0.07) 1px, transparent 1px);
     background-size: 30px 30px;
   }
+
+  /* ── respond.io design system ── */
+
+  /* Pure black page */
+  .page-dark {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  /* Sticky navbar glass */
+  .navbar-glass {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  /* Primary blue CTA button */
+  .btn-blue {
+    background-color: #1B70FF;
+    color: #ffffff;
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+
+  .btn-blue:hover {
+    background-color: #1557d4;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px -4px rgba(27, 112, 255, 0.45);
+  }
+
+  /* Outline button */
+  .btn-outline-white {
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-weight: 500;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .btn-outline-white:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* Glass card — respond.io feature cards */
+  .glass-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+  }
+
+  .glass-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(27, 112, 255, 0.3);
+    transform: translateY(-3px);
+  }
+
+  /* Badge pill */
+  .badge-pill {
+    background: rgba(27, 112, 255, 0.12);
+    border: 1px solid rgba(27, 112, 255, 0.3);
+    color: #6ba5ff;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 4px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Blue glow text */
+  .text-blue-glow {
+    color: #1B70FF;
+    text-shadow: 0 0 40px rgba(27, 112, 255, 0.35);
+  }
+
+  /* Animated gradient headline */
+  .headline-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, #a8c8ff 50%, #ffffff 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: headline-shimmer 5s ease infinite;
+  }
+
+  @keyframes headline-shimmer {
+    0% {
+      background-position: 0% center;
+    }
+
+    50% {
+      background-position: 100% center;
+    }
+
+    100% {
+      background-position: 0% center;
+    }
+  }
+
+  /* Hero blob orbs */
+  .blob-blue {
+    background: radial-gradient(ellipse, rgba(27, 112, 255, 0.22) 0%, transparent 70%);
+    filter: blur(48px);
+    border-radius: 50%;
+  }
+
+  .blob-purple {
+    background: radial-gradient(ellipse, rgba(120, 60, 255, 0.18) 0%, transparent 70%);
+    filter: blur(60px);
+    border-radius: 50%;
+  }
+
+  /* Grid line bg */
+  .bg-grid-lines {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  /* Logo brand mono */
+  .logo-mono {
+    opacity: 0.4;
+    filter: grayscale(100%) brightness(200%);
+    transition: opacity 0.2s;
+  }
+
+  .logo-mono:hover {
+    opacity: 0.7;
+  }
 }
