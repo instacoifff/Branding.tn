@@ -10,11 +10,15 @@ import CreativeBrief from "./pages/CreativeBrief";
 import Overview from "./pages/dashboard/Overview";
 import Projects from "./pages/dashboard/Projects";
 import Files from "./pages/dashboard/Files";
+import Settings from "./pages/dashboard/Settings";
+import ProjectDetail from "./pages/dashboard/ProjectDetail";
 import AdminOverview from "./pages/dashboard/admin/AdminOverview";
 import AllProjects from "./pages/dashboard/admin/AllProjects";
 import UsersList from "./pages/dashboard/admin/UsersList";
 import FilesVault from "./pages/dashboard/admin/FilesVault";
 import AdminProjectDetail from "./pages/dashboard/admin/AdminProjectDetail";
+import TeamMembers from "./pages/dashboard/admin/TeamMembers";
+import CreativeOverview from "./pages/dashboard/creative/CreativeOverview";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -23,11 +27,18 @@ import { I18nProvider } from "./i18n";
 
 const queryClient = new QueryClient();
 
-// Lightweight admin guard — no layout, just a role check
+// Role guards
 const AdminGuard = ({ children }: { children: React.ReactNode }) => {
   const { profile, loading } = useAuth();
   if (loading) return null;
   if (profile?.role !== "admin") return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+};
+
+const CreativeGuard = ({ children }: { children: React.ReactNode }) => {
+  const { profile, loading } = useAuth();
+  if (loading) return null;
+  if (profile?.role !== "creative" && profile?.role !== "admin") return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 };
 
@@ -46,7 +57,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/brief" element={<CreativeBrief />} />
 
-              {/* Dashboard — requires auth, renders shared DashboardLayout */}
+              {/* Dashboard — requires auth */}
               <Route
                 path="/dashboard"
                 element={
@@ -58,14 +69,20 @@ const App = () => (
                 {/* Client routes */}
                 <Route index element={<Overview />} />
                 <Route path="projects" element={<Projects />} />
+                <Route path="projects/:id" element={<ProjectDetail />} />
                 <Route path="files" element={<Files />} />
+                <Route path="settings" element={<Settings />} />
 
-                {/* Admin routes — additionally requires admin role */}
+                {/* Creative routes */}
+                <Route path="creative" element={<CreativeGuard><CreativeOverview /></CreativeGuard>} />
+
+                {/* Admin routes */}
                 <Route path="admin" element={<AdminGuard><AdminOverview /></AdminGuard>} />
                 <Route path="admin/projects" element={<AdminGuard><AllProjects /></AdminGuard>} />
                 <Route path="admin/projects/:id" element={<AdminGuard><AdminProjectDetail /></AdminGuard>} />
                 <Route path="admin/users" element={<AdminGuard><UsersList /></AdminGuard>} />
                 <Route path="admin/files" element={<AdminGuard><FilesVault /></AdminGuard>} />
+                <Route path="admin/team" element={<AdminGuard><TeamMembers /></AdminGuard>} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

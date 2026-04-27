@@ -184,7 +184,10 @@
             "download": "Download",
             "concept": "Concept",
             "final": "Final",
-            "project": "Project"
+            "project": "Project",
+            "fileName": "File Name",
+            "type": "Type",
+            "uploaded": "Uploaded"
         },
         "adminProjects": {
             "title": "All Projects",
@@ -265,7 +268,85 @@
             "errorUpload": "Failed to upload file.",
             "toastDeleted": "File deleted.",
             "errorDelete": "Failed to delete file."
+        },
+        "settingsPage": {
+            "title": "Settings",
+            "subtitle": "Manage your account and preferences",
+            "profileSection": "Profile",
+            "fullName": "Full Name",
+            "company": "Company",
+            "email": "Email",
+            "emailHint": "Email cannot be changed",
+            "changePhoto": "Change photo",
+            "avatarUploading": "Uploading...",
+            "saveProfile": "Save Profile",
+            "saving": "Saving...",
+            "toastSaved": "Profile updated successfully.",
+            "errorSave": "Failed to update profile.",
+            "passwordSection": "Change Password",
+            "newPassword": "New Password",
+            "confirmPassword": "Confirm Password",
+            "passwordMismatch": "Passwords do not match.",
+            "passwordTooShort": "Password must be at least 8 characters.",
+            "savePassword": "Update Password",
+            "toastPasswordSaved": "Password updated successfully.",
+            "errorPasswordSave": "Failed to update password.",
+            "preferences": "Preferences",
+            "theme": "Theme",
+            "language": "Language"
+        },
+        "projectDetailPage": {
+            "back": "Back to Projects",
+            "stage": "Stage",
+            "of": "of",
+            "payment": "Payment",
+            "total": "Total",
+            "deposit": "Deposit (30%)",
+            "depositPaid": "Deposit Paid ✓",
+            "depositPending": "Deposit Pending",
+            "files": "Project Files",
+            "noFiles": "No files yet — your designer will upload files here",
+            "complete": "complete"
+        },
+        "breadcrumbs": {
+            "dashboard": "Dashboard",
+            "projects": "Projects",
+            "files": "Files",
+            "settings": "Settings",
+            "admin": "Admin",
+            "users": "Users",
+            "filesVault": "Files Vault",
+            "team": "Team",
+            "creative": "Creative"
+        },
+        "team": "Team",
+        "teamPage": {
+            "title": "Team Members",
+            "subtitle": "Manage your creative team",
+            "addMember": "Add Member",
+            "editMember": "Edit Member",
+            "name": "Name *",
+            "role": "Role *",
+            "bio": "Bio",
+            "photoUrl": "Photo URL",
+            "noMembers": "No team members yet",
+            "noMembersDesc": "Add your first member to assign them to projects",
+            "toastAdded": "Member added successfully.",
+            "toastUpdated": "Member updated.",
+            "toastDeleted": "Member deleted.",
+            "deleteConfirm": "Delete this member?"
+        },
+        "notifications": {
+            "title": "Notifications",
+            "noNotifications": "No notifications yet",
+            "allRead": "All read"
         }
+    },
+    "notFound": {
+        "title": "Page Not Found",
+        "subtitle": "The page you're looking for doesn't exist or has been moved.",
+        "backHome": "Back to Home",
+        "backDashboard": "Go to Dashboard"
     },
     "footer": {
         "services": "Services",

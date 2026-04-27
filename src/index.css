@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap');
 
 @layer base {
   :root {
@@ -51,6 +51,49 @@
     --surface: 270 20% 98%;
     --surface-hover: 270 20% 95%;
   }
+
+  /* ── Dark mode palette ── */
+  .dark {
+    --background: 250 20% 7%;
+    --foreground: 240 10% 94%;
+
+    --card: 250 18% 11%;
+    --card-foreground: 240 10% 94%;
+
+    --popover: 250 18% 11%;
+    --popover-foreground: 240 10% 94%;
+
+    --primary: 270 75% 65%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 20% 18%;
+    --secondary-foreground: 270 30% 85%;
+
+    --muted: 250 15% 15%;
+    --muted-foreground: 240 8% 55%;
+
+    --accent: 270 20% 18%;
+    --accent-foreground: 270 30% 85%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 250 15% 18%;
+    --input: 250 15% 18%;
+    --ring: 270 75% 65%;
+
+    --sidebar-background: 250 20% 9%;
+    --sidebar-foreground: 240 10% 85%;
+    --sidebar-primary: 270 75% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 270 20% 16%;
+    --sidebar-accent-foreground: 270 25% 80%;
+    --sidebar-border: 250 15% 16%;
+    --sidebar-ring: 270 75% 65%;
+
+    --surface: 250 18% 13%;
+    --surface-hover: 250 18% 16%;
+  }
 }
 
 @layer base {
@@ -93,8 +136,70 @@
   .card-hover {
     @apply bg-card rounded-xl border border-border shadow-soft transition-all duration-200;
   }
+
   .card-hover:hover {
     @apply shadow-card border-primary/20;
     transform: translateY(-2px);
+  }
+
+  /* Animated gradient text — slow, elegant */
+  .text-gradient-animate {
+    background: linear-gradient(135deg,
+        hsl(270 80% 62%),
+        hsl(310 75% 62%),
+        hsl(330 80% 65%),
+        hsl(270 80% 62%));
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-shift 7s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0% {
+      background-position: 0% center;
+    }
+
+    100% {
+      background-position: 300% center;
+    }
+  }
+
+  /* Subtle float — only for the hero glow orb */
+  .animate-float {
+    animation: float 9s ease-in-out infinite;
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-14px);
+    }
+  }
+
+  /* Premium service card */
+  .glow-card {
+    background: hsl(var(--card));
+    border-radius: 1.125rem;
+    border: 1px solid hsl(var(--border));
+    transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  .glow-card:hover {
+    border-color: hsl(270 80% 60% / 0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -12px hsl(270 80% 60% / 0.1), 0 4px 12px -4px hsl(0 0% 0% / 0.06);
+  }
+
+  /* Dot grid background */
+  .bg-dot-pattern {
+    background-image: radial-gradient(circle, rgba(139, 92, 246, 0.07) 1px, transparent 1px);
+    background-size: 30px 30px;
   }
 }

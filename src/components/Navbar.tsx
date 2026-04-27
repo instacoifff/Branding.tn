@@ -1,14 +1,21 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { useI18n } from "@/i18n";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const isDashboard = location.pathname.startsWith("/dashboard");
   const { t, lang, setLang } = useI18n();
+  const { signOut, user } = useAuth();
+  const { theme, setTheme } = useTheme();
+
 
   return (
     <motion.nav
@@ -44,32 +51,30 @@ const Navbar = () => {
               </Link>
             </>
           )}
-          {isDashboard && (
-            <>
-              <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                {t("nav.overview")}
-              </Link>
-              <Link to="/dashboard/files" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                {t("nav.files")}
-              </Link>
-              <Link to="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                {t("nav.logout")}
-              </Link>
-            </>
+          {isDashboard && user && (
+            <button
+              onClick={() => { signOut(); navigate("/"); }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {t("nav.logout")}
+            </button>
           )}
-          {/* Language toggle */}
+          {/* Language + theme toggle */}
           <div className="flex items-center gap-1 ml-2">
             <button
               onClick={() => setLang("fr")}
               className={`text-xs px-2 py-1 rounded transition-colors ${lang === "fr" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            >
-              FR
-            </button>
+            >FR</button>
             <button
               onClick={() => setLang("en")}
               className={`text-xs px-2 py-1 rounded transition-colors ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            >EN</button>
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="ml-1 w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label="Toggle theme"
             >
-              EN
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
             </button>
           </div>
         </div>
@@ -95,16 +100,15 @@ const Navbar = () => {
           <Link to="/auth" onClick={() => setIsOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground">
             {t("nav.signIn")}
           </Link>
-          <Link
-            to="/builder"
-            onClick={() => setIsOpen(false)}
-            className="block text-sm bg-gradient-brand text-primary-foreground px-4 py-2 rounded-lg text-center"
-          >
+          <Link to="/builder" onClick={() => setIsOpen(false)} className="block text-sm bg-gradient-brand text-primary-foreground px-4 py-2 rounded-lg text-center">
             {t("nav.startProject")}
           </Link>
           <div className="flex items-center gap-2 pt-1">
             <button onClick={() => setLang("fr")} className={`text-xs px-2 py-1 rounded ${lang === "fr" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>FR</button>
             <button onClick={() => setLang("en")} className={`text-xs px-2 py-1 rounded ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>EN</button>
+            <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="ml-1 w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
           </div>
         </motion.div>
       )}
@@ -113,3 +117,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

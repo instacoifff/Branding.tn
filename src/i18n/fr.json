@@ -184,7 +184,10 @@
             "download": "Télécharger",
             "concept": "Concept",
             "final": "Final",
-            "project": "Projet"
+            "project": "Projet",
+            "fileName": "Nom du fichier",
+            "type": "Type",
+            "uploaded": "Téléversé le"
         },
         "adminProjects": {
             "title": "Tous les Projets",
@@ -265,7 +268,85 @@
             "errorUpload": "Échec du téléversement.",
             "toastDeleted": "Fichier supprimé.",
             "errorDelete": "Échec de la suppression."
+        },
+        "settingsPage": {
+            "title": "Paramètres",
+            "subtitle": "Gérez votre compte et vos préférences",
+            "profileSection": "Profil",
+            "fullName": "Nom complet",
+            "company": "Entreprise",
+            "email": "Email",
+            "emailHint": "L'email ne peut pas être modifié",
+            "changePhoto": "Changer la photo",
+            "avatarUploading": "Téléversement...",
+            "saveProfile": "Enregistrer le profil",
+            "saving": "Enregistrement...",
+            "toastSaved": "Profil mis à jour avec succès.",
+            "errorSave": "Échec de la mise à jour du profil.",
+            "passwordSection": "Changer le mot de passe",
+            "newPassword": "Nouveau mot de passe",
+            "confirmPassword": "Confirmer le mot de passe",
+            "passwordMismatch": "Les mots de passe ne correspondent pas.",
+            "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+            "savePassword": "Mettre à jour le mot de passe",
+            "toastPasswordSaved": "Mot de passe mis à jour.",
+            "errorPasswordSave": "Échec de la mise à jour du mot de passe.",
+            "preferences": "Préférences",
+            "theme": "Thème",
+            "language": "Langue"
+        },
+        "projectDetailPage": {
+            "back": "Retour aux projets",
+            "stage": "Étape",
+            "of": "sur",
+            "payment": "Paiement",
+            "total": "Total",
+            "deposit": "Acompte (30%)",
+            "depositPaid": "Acompte payé ✓",
+            "depositPending": "Acompte en attente",
+            "files": "Fichiers du projet",
+            "noFiles": "Aucun fichier pour l'instant — votre designer téléversera des fichiers ici",
+            "complete": "complété"
+        },
+        "breadcrumbs": {
+            "dashboard": "Tableau de bord",
+            "projects": "Projets",
+            "files": "Fichiers",
+            "settings": "Paramètres",
+            "admin": "Admin",
+            "users": "Utilisateurs",
+            "filesVault": "Coffre de fichiers",
+            "team": "Équipe",
+            "creative": "Créatif"
+        },
+        "team": "Équipe",
+        "teamPage": {
+            "title": "Membres de l'équipe",
+            "subtitle": "Gérez votre équipe créative",
+            "addMember": "Ajouter un membre",
+            "editMember": "Modifier le membre",
+            "name": "Nom *",
+            "role": "Rôle *",
+            "bio": "Bio",
+            "photoUrl": "URL de la photo",
+            "noMembers": "Aucun membre pour l'instant",
+            "noMembersDesc": "Ajoutez votre premier membre pour les assigner aux projets",
+            "toastAdded": "Membre ajouté avec succès.",
+            "toastUpdated": "Membre mis à jour.",
+            "toastDeleted": "Membre supprimé.",
+            "deleteConfirm": "Supprimer ce membre ?"
+        },
+        "notifications": {
+            "title": "Notifications",
+            "noNotifications": "Aucune notification pour l'instant",
+            "allRead": "Tout lu"
         }
+    },
+    "notFound": {
+        "title": "Page introuvable",
+        "subtitle": "La page que vous recherchez n'existe pas ou a été déplacée.",
+        "backHome": "Retour à l'accueil",
+        "backDashboard": "Aller au tableau de bord"
     },
     "footer": {
         "services": "Services",

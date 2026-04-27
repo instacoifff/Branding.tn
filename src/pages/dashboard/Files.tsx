@@ -74,10 +74,10 @@ const Files = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-muted/50 text-muted-foreground font-medium border-b border-border">
                             <tr>
-                                <th className="px-6 py-4">File Name</th>
+                                <th className="px-6 py-4">{t("dashboard.filesPage.fileName")}</th>
                                 <th className="px-6 py-4">{t("dashboard.filesPage.project")}</th>
-                                <th className="px-6 py-4">Type</th>
-                                <th className="px-6 py-4">Uploaded</th>
+                                <th className="px-6 py-4">{t("dashboard.filesPage.type")}</th>
+                                <th className="px-6 py-4">{t("dashboard.filesPage.uploaded")}</th>
                                 <th className="px-6 py-4 text-right">{t("dashboard.filesPage.download")}</th>
                             </tr>
                         </thead>
