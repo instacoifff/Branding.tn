@@ -98,22 +98,22 @@ const Auth = () => {
 
   // Input style — dark glass
   const inputBase =
-    "w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-[#1B70FF]/40 focus:border-[#1B70FF]/50 transition-all duration-200";
+    "w-full bg-background border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all duration-200";
 
   // ─── Confirm-email screen ─────────────────────────────────────────────────
   if (confirmEmail) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-6">
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="blob-blue absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-40 pointer-events-none" />
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
           className="relative z-10 w-full max-w-md text-center glass-card p-10">
-          <div className="w-16 h-16 rounded-2xl bg-[#1B70FF]/15 border border-[#1B70FF]/25 flex items-center justify-center mx-auto mb-6">
-            <Mail size={28} className="text-[#1B70FF]" />
+          <div className="w-16 h-16 rounded-2xl bg-primary/15 border border-primary/25 flex items-center justify-center mx-auto mb-6">
+            <Mail size={28} className="text-primary" />
           </div>
-          <h1 className="text-2xl font-semibold text-white mb-2">{t("auth.checkEmail")}</h1>
-          <p className="text-[#9CA3AF] text-sm mb-8">{t("auth.confirmEmail")}</p>
+          <h1 className="text-2xl font-semibold text-foreground mb-2">{t("auth.checkEmail")}</h1>
+          <p className="text-muted-foreground text-sm mb-8">{t("auth.confirmEmail")}</p>
           <button onClick={() => { setConfirmEmail(false); goTo("signin", -1); }}
-            className="text-sm text-[#6ba5ff] font-medium hover:underline flex items-center gap-1.5 mx-auto">
+            className="text-sm text-primary font-medium hover:underline flex items-center gap-1.5 mx-auto">
             <ArrowLeft size={14} /> {t("auth.backToSignIn")}
           </button>
         </motion.div>
@@ -122,33 +122,33 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-screen bg-background flex">
       {/* ── Left panel (hidden on mobile) ───────────────────────────── */}
-      <div className="hidden lg:flex lg:w-[480px] xl:w-[520px] relative flex-col justify-between p-12 border-r border-white/[0.06] bg-[#050505] shrink-0">
+      <div className="hidden lg:flex lg:w-[480px] xl:w-[520px] relative flex-col justify-between p-12 border-r border-border bg-card shrink-0">
         {/* Background orbs */}
         <div className="blob-blue absolute top-20 left-10 w-72 h-72 opacity-30 pointer-events-none" />
         <div className="blob-purple absolute bottom-20 right-0 w-64 h-64 opacity-25 pointer-events-none" />
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 z-10 relative">
-          <div className="w-8 h-8 rounded-lg bg-[#1B70FF] flex items-center justify-center shadow-[0_0_16px_rgba(27,112,255,0.5)]">
-            <span className="font-bold text-sm text-white">B</span>
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-brand">
+            <span className="font-bold text-sm text-primary-foreground">B</span>
           </div>
-          <span className="text-base font-semibold text-white tracking-tight">
-            branding<span className="text-[#1B70FF]">.tn</span>
+          <span className="text-base font-semibold text-foreground tracking-tight">
+            branding<span className="text-primary">.tn</span>
           </span>
         </Link>
 
         {/* Main copy */}
         <div className="z-10 relative">
-          <div className="badge-pill mb-6">
-            <Sparkles size={12} className="text-blue-400" /> Premium Branding Agency
+          <div className="badge-pill border-border mb-6">
+            <Sparkles size={12} className="text-primary" /> Premium Branding Agency
           </div>
-          <h2 className="text-4xl font-semibold text-white leading-[1.1] mb-5">
+          <h2 className="text-4xl font-semibold text-foreground leading-[1.1] mb-5">
             Your brand,<br />
             <span className="headline-gradient">beautifully managed.</span>
           </h2>
-          <p className="text-[#6B7280] text-base leading-relaxed mb-9">
+          <p className="text-muted-foreground text-base leading-relaxed mb-9">
             Access your project dashboard, track deliverables, download files, and communicate with your design team — all in one place.
           </p>
 
@@ -156,28 +156,28 @@ const Auth = () => {
           <div className="space-y-4">
             {TRUST_ITEMS.map(({ icon: Icon, text }) => (
               <div key={text} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#1B70FF]/10 border border-[#1B70FF]/20 flex items-center justify-center shrink-0">
-                  <Icon size={14} className="text-[#1B70FF]" />
+                <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                  <Icon size={14} className="text-primary" />
                 </div>
-                <p className="text-sm text-[#9CA3AF]">{text}</p>
+                <p className="text-sm text-muted-foreground">{text}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Testimonial */}
-        <div className="z-10 relative glass-card p-5">
+        <div className="z-10 relative glass-card p-5 border border-border">
           <div className="flex gap-0.5 mb-3">
-            {[...Array(5)].map((_, i) => <Star key={i} size={12} className="text-[#1B70FF] fill-[#1B70FF]" />)}
+            {[...Array(5)].map((_, i) => <Star key={i} size={12} className="text-primary fill-primary" />)}
           </div>
-          <p className="text-[#D1D5DB] text-sm leading-relaxed mb-4">
+          <p className="text-muted-foreground text-sm leading-relaxed mb-4">
             "Branding.tn elevated our entire visual identity. Fast, precise, and genuinely creative."
           </p>
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-[#1B70FF]/20 border border-[#1B70FF]/30 flex items-center justify-center text-[#6ba5ff] font-bold text-xs">S</div>
+            <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-xs">S</div>
             <div>
-              <p className="text-white text-xs font-semibold">Sarra Mansour</p>
-              <p className="text-[#6B7280] text-xs">CEO, Artisan Tunisia</p>
+              <p className="text-foreground text-xs font-semibold">Sarra Mansour</p>
+              <p className="text-muted-foreground text-xs">CEO, Artisan Tunisia</p>
             </div>
           </div>
         </div>
@@ -192,20 +192,20 @@ const Auth = () => {
         <div className="flex items-center justify-between px-8 py-5 relative z-10">
           {/* Logo (mobile only) */}
           <Link to="/" className="flex items-center gap-2 lg:hidden">
-            <div className="w-7 h-7 rounded-lg bg-[#1B70FF] flex items-center justify-center">
-              <span className="font-bold text-xs text-white">B</span>
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
+              <span className="font-bold text-xs text-primary-foreground">B</span>
             </div>
-            <span className="text-sm font-semibold text-white">branding<span className="text-[#1B70FF]">.tn</span></span>
+            <span className="text-sm font-semibold text-foreground">branding<span className="text-primary">.tn</span></span>
           </Link>
           <div className="hidden lg:block" />
 
           {/* Lang toggle */}
-          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg p-1">
+          <div className="flex items-center gap-1 bg-muted border border-border rounded-lg p-1">
             {(["fr", "en"] as const).map((l) => (
               <button key={l} onClick={() => setLang(l)}
                 className={`px-3 py-1 rounded-md text-xs font-semibold uppercase transition-all ${lang === l
-                  ? "bg-white/10 text-white"
-                  : "text-white/40 hover:text-white"}`}>
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"}`}>
                 {l}
               </button>
             ))}
@@ -221,13 +221,13 @@ const Auth = () => {
                 initial="enter" animate="center" exit="exit"
                 transition={{ duration: 0.2, ease: "easeOut" }}
                 className="mb-8">
-                <h1 className="text-3xl font-semibold text-white tracking-tight mb-2">
+                <h1 className="text-3xl font-semibold text-foreground tracking-tight mb-2">
                   {mode === "signup" ? t("auth.createAccount") :
                     mode === "forgot" ? t("auth.resetPassword") :
                       mode === "reset-sent" ? t("auth.checkEmail") :
                         t("auth.welcomeBack")}
                 </h1>
-                <p className="text-[#6B7280] text-sm">
+                <p className="text-muted-foreground text-sm">
                   {mode === "signup" ? t("auth.signUpSubtitle") :
                     mode === "forgot" ? t("auth.resetSubtitle") :
                       mode === "reset-sent" ? `${t("auth.checkEmailDesc")} ${email}` :
@@ -249,11 +249,11 @@ const Auth = () => {
                       <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mx-auto mb-5">
                         <CheckCircle2 size={26} className="text-green-500" />
                       </div>
-                      <p className="text-[#9CA3AF] text-sm mb-6">
-                        {t("auth.checkEmailDesc")} <span className="font-medium text-white">{email}</span>
+                      <p className="text-muted-foreground text-sm mb-6">
+                        {t("auth.checkEmailDesc")} <span className="font-medium text-foreground">{email}</span>
                       </p>
                       <button onClick={() => goTo("signin", -1)}
-                        className="text-sm text-[#6ba5ff] font-medium hover:underline flex items-center gap-1.5 mx-auto">
+                        className="text-sm text-primary font-medium hover:underline flex items-center gap-1.5 mx-auto">
                         <ArrowLeft size={14} /> {t("auth.backToSignIn")}
                       </button>
                     </div>
@@ -265,9 +265,9 @@ const Auth = () => {
                       {/* Full name */}
                       {mode === "signup" && (
                         <div className="space-y-1.5">
-                          <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t("auth.fullName")}</label>
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("auth.fullName")}</label>
                           <div className="relative">
-                            <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                            <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <input type="text" value={name} onChange={e => setName(e.target.value)}
                               placeholder={t("auth.namePlaceholder")} className={inputBase + " pl-10"} required />
                           </div>
@@ -276,9 +276,9 @@ const Auth = () => {
 
                       {/* Email */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t("auth.email")}</label>
+                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("auth.email")}</label>
                         <div className="relative">
-                          <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                          <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                           <input type="email" value={email} onChange={e => setEmail(e.target.value)}
                             placeholder={t("auth.emailPlaceholder")} className={inputBase + " pl-10"} required />
                         </div>
@@ -288,16 +288,16 @@ const Auth = () => {
                       {mode !== "forgot" && (
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between">
-                            <label className="text-xs font-semibold text-white/50 uppercase tracking-wider">{t("auth.password")}</label>
+                            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t("auth.password")}</label>
                             {mode === "signin" && (
                               <button type="button" onClick={() => goTo("forgot")}
-                                className="text-xs text-[#6ba5ff] hover:underline font-medium">
+                                className="text-xs text-primary hover:underline font-medium">
                                 {t("auth.forgotPassword")}
                               </button>
                             )}
                           </div>
                           <div className="relative">
-                            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                            <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <input
                               type={showPw ? "text" : "password"}
                               value={password}
@@ -308,7 +308,7 @@ const Auth = () => {
                               minLength={mode === "signup" ? 8 : undefined}
                             />
                             <button type="button" onClick={() => setShowPw(!showPw)}
-                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-white/30 hover:text-white/70 font-medium transition-colors">
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors">
                               {showPw
                                 ? <span className="flex items-center gap-1"><EyeOff size={13} />{t("auth.hidePassword")}</span>
                                 : <span className="flex items-center gap-1"><Eye size={13} />{t("auth.showPassword")}</span>}
@@ -321,14 +321,14 @@ const Auth = () => {
                               <div className="flex gap-1">
                                 {[1, 2, 3, 4].map(i => (
                                   <div key={i}
-                                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= pwStrength.score ? pwStrength.color : "bg-white/10"}`} />
+                                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= pwStrength.score ? pwStrength.color : "bg-muted"}`} />
                                 ))}
                               </div>
-                              <p className="text-xs text-white/30">
+                              <p className="text-xs text-muted-foreground">
                                 {t("auth.passwordStrength")}:{" "}
-                                <span className={`font-medium ${pwStrength.score <= 1 ? "text-red-400" :
-                                    pwStrength.score === 2 ? "text-orange-400" :
-                                      pwStrength.score === 3 ? "text-yellow-400" : "text-green-400"}`}>
+                                <span className={`font-medium ${pwStrength.score <= 1 ? "text-red-500" :
+                                  pwStrength.score === 2 ? "text-orange-500" :
+                                    pwStrength.score === 3 ? "text-yellow-500" : "text-green-500"}`}>
                                   {t(`auth.${pwStrength.label}`)}
                                 </span>
                               </p>
@@ -362,10 +362,10 @@ const Auth = () => {
                     <>
                       <div className="relative my-5">
                         <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-white/10" />
+                          <span className="w-full border-t border-border" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className="px-3 text-white/25 font-medium" style={{ background: "rgba(255,255,255,0.03)" }}>
+                          <span className="px-3 text-muted-foreground bg-card font-medium">
                             {t("auth.orContinueWith")}
                           </span>
                         </div>
@@ -377,7 +377,7 @@ const Auth = () => {
                         onClick={handleGoogle}
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
-                        className="btn-outline-white w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-medium disabled:opacity-50"
+                        className="btn-outline-white text-foreground hover:text-foreground w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-medium disabled:opacity-50"
                       >
                         <svg className="w-4 h-4" viewBox="0 0 24 24">
                           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -388,11 +388,11 @@ const Auth = () => {
                         Continue with Google
                       </motion.button>
 
-                      <p className="text-center text-xs text-white/30 mt-5">
+                      <p className="text-center text-xs text-muted-foreground mt-5">
                         {mode === "signup" ? t("auth.alreadyHaveAccount") : t("auth.dontHaveAccount")}{" "}
                         <button type="button"
                           onClick={() => goTo(mode === "signup" ? "signin" : "signup", mode === "signup" ? -1 : 1)}
-                          className="text-[#6ba5ff] font-semibold hover:underline">
+                          className="text-primary font-semibold hover:underline">
                           {mode === "signup" ? t("auth.signIn") : t("auth.signUp")}
                         </button>
                       </p>
@@ -402,7 +402,7 @@ const Auth = () => {
                   {/* Back on forgot */}
                   {mode === "forgot" && (
                     <button type="button" onClick={() => goTo("signin", -1)}
-                      className="mt-4 text-xs text-white/30 hover:text-white flex items-center gap-1.5 mx-auto w-fit transition-colors">
+                      className="mt-4 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1.5 mx-auto w-fit transition-colors">
                       <ArrowLeft size={13} /> {t("auth.backToSignIn")}
                     </button>
                   )}
@@ -411,11 +411,11 @@ const Auth = () => {
             </div>
 
             {/* Footer note */}
-            <p className="text-center text-xs text-white/20 mt-5">
+            <p className="text-center text-xs text-muted-foreground mt-5">
               By signing in you agree to our{" "}
-              <a href="#" className="text-white/40 hover:text-white transition-colors">Terms</a>
+              <a href="#" className="text-foreground hover:underline transition-colors">Terms</a>
               {" & "}
-              <a href="#" className="text-white/40 hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="text-foreground hover:underline transition-colors">Privacy Policy</a>
             </p>
           </div>
         </div>

@@ -61,16 +61,16 @@ const DashboardLayout = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#060606] flex">
+        <div className="min-h-screen bg-background flex">
             <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
             {/* Main content */}
             <div className="flex-1 flex flex-col md:ml-64 min-w-0">
                 {/* Top bar */}
-                <header className="h-14 border-b border-white/[0.06] bg-[#060606]/90 backdrop-blur-xl sticky top-0 z-20 flex items-center px-4 md:px-6 gap-4">
+                <header className="h-14 border-b border-border bg-background/90 backdrop-blur-xl sticky top-0 z-20 flex items-center px-4 md:px-6 gap-4">
                     {/* Hamburger */}
                     <button onClick={() => setSidebarOpen(true)}
-                        className="md:hidden text-white/40 hover:text-white transition-colors" aria-label="Open menu">
+                        className="md:hidden text-muted-foreground hover:text-foreground transition-colors" aria-label="Open menu">
                         <Menu size={19} />
                     </button>
 
@@ -78,11 +78,11 @@ const DashboardLayout = () => {
                     <nav className="flex items-center gap-1.5 text-sm min-w-0 flex-1 overflow-hidden">
                         {breadcrumbs.map((crumb, idx) => (
                             <div key={crumb.href} className="flex items-center gap-1.5 min-w-0">
-                                {idx > 0 && <ChevronRight size={12} className="text-white/20 shrink-0" />}
+                                {idx > 0 && <ChevronRight size={12} className="text-muted-foreground shrink-0" />}
                                 {idx === breadcrumbs.length - 1 ? (
-                                    <span className="font-semibold text-white text-sm truncate">{crumb.label}</span>
+                                    <span className="font-semibold text-foreground text-sm truncate">{crumb.label}</span>
                                 ) : (
-                                    <Link to={crumb.href} className="text-white/35 hover:text-white transition-colors text-sm truncate">
+                                    <Link to={crumb.href} className="text-muted-foreground hover:text-foreground transition-colors text-sm truncate">
                                         {crumb.label}
                                     </Link>
                                 )}
@@ -92,7 +92,7 @@ const DashboardLayout = () => {
 
                     {/* Theme toggle */}
                     <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-colors"
+                        className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         aria-label="Toggle theme">
                         {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
                     </button>
@@ -103,16 +103,16 @@ const DashboardLayout = () => {
                     {/* Avatar dropdown */}
                     <div className="relative shrink-0" ref={avatarRef}>
                         <button onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
-                            className="flex items-center gap-2.5 rounded-xl hover:bg-white/[0.04] p-1.5 transition-colors">
+                            className="flex items-center gap-2.5 rounded-xl hover:bg-muted p-1.5 transition-colors">
                             <div className="text-right hidden sm:block">
-                                <p className="text-xs font-semibold text-white leading-tight">{profile?.full_name || user?.email}</p>
-                                <p className="text-[10px] text-white/30 capitalize">{profile?.role || "user"}</p>
+                                <p className="text-xs font-semibold text-foreground leading-tight">{profile?.full_name || user?.email}</p>
+                                <p className="text-[10px] text-muted-foreground capitalize">{profile?.role || "user"}</p>
                             </div>
-                            <div className="w-8 h-8 rounded-full bg-[#1B70FF]/20 border border-[#1B70FF]/30 flex items-center justify-center overflow-hidden shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden shrink-0">
                                 {profile?.avatar_url ? (
                                     <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <span className="text-xs font-bold text-[#6ba5ff]">{initials}</span>
+                                    <span className="text-xs font-bold text-primary">{initials}</span>
                                 )}
                             </div>
                         </button>
@@ -125,19 +125,19 @@ const DashboardLayout = () => {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.96, y: -4 }}
                                     transition={{ duration: 0.15 }}
-                                    className="absolute right-0 top-full mt-2 w-48 bg-[#111] border border-white/10 rounded-xl shadow-2xl py-1.5 z-50 overflow-hidden"
+                                    className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-1.5 z-50 overflow-hidden"
                                 >
                                     <Link to="/dashboard/settings" onClick={() => setAvatarMenuOpen(false)}
                                         className={cn("flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors",
                                             pathname.startsWith("/dashboard/settings")
-                                                ? "text-[#6ba5ff] bg-[#1B70FF]/10"
-                                                : "text-white/70 hover:text-white hover:bg-white/5")}>
+                                                ? "text-primary bg-primary/10"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
                                         <Settings size={14} />
                                         {t("dashboard.settings")}
                                     </Link>
-                                    <div className="border-t border-white/[0.06] my-1" />
+                                    <div className="border-t border-border my-1" />
                                     <button onClick={() => { setAvatarMenuOpen(false); signOut(); }}
-                                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors w-full text-left">
+                                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors w-full text-left">
                                         <LogOut size={14} />
                                         {t("dashboard.signOut")}
                                     </button>

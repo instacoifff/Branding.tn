@@ -28,15 +28,15 @@ const STAGE_LABELS = ["Brief", "Concepts", "Refinement", "Finalisation", "Delive
 const fadeUp = { hidden: { opacity: 0, y: 14 }, show: { opacity: 1, y: 0 } };
 
 const SkeletonCard = () => (
-  <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 animate-pulse">
+  <div className="rounded-2xl border border-border bg-card p-6 animate-pulse">
     <div className="flex justify-between mb-5">
       <div className="space-y-2">
-        <div className="h-3 w-16 bg-white/10 rounded-full" />
-        <div className="h-5 w-48 bg-white/10 rounded" />
+        <div className="h-3 w-16 bg-muted rounded-full" />
+        <div className="h-5 w-48 bg-muted rounded" />
       </div>
-      <div className="h-8 w-20 bg-white/10 rounded-lg" />
+      <div className="h-8 w-20 bg-muted rounded-lg" />
     </div>
-    <div className="h-1.5 bg-white/10 rounded-full" />
+    <div className="h-1.5 bg-muted rounded-full" />
   </div>
 );
 
@@ -68,16 +68,16 @@ const Overview = () => {
       {/* ── Hero greeting ── */}
       <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-10">
         <div className="badge-pill mb-4">
-          <Sparkles size={12} className="text-blue-400" />
+          <Sparkles size={12} className="text-primary" />
           Client Dashboard
         </div>
-        <h1 className="text-4xl font-semibold text-white tracking-tight mb-2">
+        <h1 className="text-4xl font-semibold text-foreground tracking-tight mb-2">
           {t("dashboard.welcome")},&nbsp;
           <span className="headline-gradient">
             {profile?.full_name?.split(" ")[0] || "there"}
           </span> 👋
         </h1>
-        <p className="text-white/40 text-base">
+        <p className="text-muted-foreground text-base">
           Here's a real-time view of your active projects with branding.tn.
         </p>
       </motion.div>
@@ -90,15 +90,15 @@ const Overview = () => {
           className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10"
         >
           {[
-            { label: "Total Projects", value: projects.length, icon: FolderOpen, color: "text-white" },
-            { label: "Active", value: activeCount, icon: TrendingUp, color: "text-[#6ba5ff]" },
-            { label: "Completed", value: completedCount, icon: CheckCircle2, color: "text-green-400" },
+            { label: "Total Projects", value: projects.length, icon: FolderOpen, color: "text-foreground" },
+            { label: "Active", value: activeCount, icon: TrendingUp, color: "text-primary" },
+            { label: "Completed", value: completedCount, icon: CheckCircle2, color: "text-green-500" },
           ].map(stat => (
             <motion.div key={stat.label} variants={fadeUp}
-              className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+              className="rounded-2xl border border-border bg-card p-5">
               <div className="flex items-center gap-2.5 mb-2">
                 <stat.icon size={14} className={stat.color} />
-                <p className="text-xs font-medium text-white/40">{stat.label}</p>
+                <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
               </div>
               <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
             </motion.div>
@@ -113,12 +113,12 @@ const Overview = () => {
         </div>
       ) : projects.length === 0 ? (
         <motion.div variants={fadeUp} initial="hidden" animate="show"
-          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-16 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-5">
-            <FolderOpen size={24} className="text-white/20" />
+          className="rounded-2xl border border-border bg-card p-16 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto mb-5">
+            <FolderOpen size={24} className="text-muted-foreground" />
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">{t("dashboard.noProjects")}</h3>
-          <p className="text-white/35 text-sm mb-7">{t("dashboard.projectsPage.noProjectsDesc")}</p>
+          <h3 className="text-lg font-semibold text-foreground mb-2">{t("dashboard.noProjects")}</h3>
+          <p className="text-muted-foreground text-sm mb-7">{t("dashboard.projectsPage.noProjectsDesc")}</p>
           <Link to="/builder">
             <button className="btn-blue inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold">
               <Plus size={14} /> {t("dashboard.startProject")}
@@ -132,8 +132,8 @@ const Overview = () => {
           className="space-y-4"
         >
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-semibold text-white/30 uppercase tracking-widest">Your Projects</p>
-            <Link to="/dashboard/projects" className="text-xs text-[#6ba5ff] hover:underline flex items-center gap-1">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Your Projects</p>
+            <Link to="/dashboard/projects" className="text-xs text-primary hover:underline flex items-center gap-1">
               View all <ArrowRight size={11} />
             </Link>
           </div>
@@ -143,11 +143,11 @@ const Overview = () => {
             const pct = Math.round((project.current_stage / 5) * 100);
             return (
               <motion.div key={project.id} variants={fadeUp}
-                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all p-6 group">
+                className="rounded-2xl border border-border bg-card hover:bg-muted/50 hover:border-foreground/10 transition-all p-6 group">
                 <div className="flex items-start justify-between gap-4 mb-5">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#1B70FF]/10 border border-[#1B70FF]/20 flex items-center justify-center shrink-0">
-                      <span className="text-[#6ba5ff] font-bold text-sm">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <span className="text-primary font-bold text-sm">
                         {project.title.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -155,14 +155,14 @@ const Overview = () => {
                       <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border mb-1.5 ${cfg.cls}`}>
                         <StatusIcon size={10} />{cfg.label}
                       </span>
-                      <h3 className="text-base font-semibold text-white">{project.title}</h3>
-                      <p className="text-xs text-white/30 flex items-center gap-1 mt-0.5">
+                      <h3 className="text-base font-semibold text-foreground">{project.title}</h3>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                         <Clock size={11} /> {new Date(project.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
                   <Link to={`/dashboard/projects/${project.id}`}>
-                    <button className="flex items-center gap-1.5 text-xs font-medium text-white/30 hover:text-white border border-white/10 hover:border-white/25 px-3 py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                    <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/20 px-3 py-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100">
                       View <ArrowRight size={11} />
                     </button>
                   </Link>
@@ -170,23 +170,23 @@ const Overview = () => {
 
                 {/* Progress */}
                 <div>
-                  <div className="flex justify-between text-[11px] text-white/25 mb-2">
+                  <div className="flex justify-between text-[11px] text-muted-foreground mb-2">
                     <span>Stage {project.current_stage}/5 · {STAGE_LABELS[project.current_stage - 1]}</span>
-                    <span className="font-semibold text-white/50">{pct}%</span>
+                    <span className="font-semibold text-foreground/50">{pct}%</span>
                   </div>
-                  <div className="w-full h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
                       transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                      className="h-full bg-[#1B70FF] rounded-full"
+                      className="h-full bg-primary rounded-full"
                     />
                   </div>
                   <div className="flex justify-between mt-3">
                     {STAGE_LABELS.map((label, idx) => (
                       <div key={label} className="flex flex-col items-center gap-1">
-                        <div className={`w-2 h-2 rounded-full transition-all ${idx < project.current_stage ? "bg-[#1B70FF]" : "bg-white/10"}`} />
-                        <span className={`text-[9px] hidden sm:block ${idx < project.current_stage ? "text-[#6ba5ff]" : "text-white/20"}`}>
+                        <div className={`w-2 h-2 rounded-full transition-all ${idx < project.current_stage ? "bg-primary" : "bg-muted"}`} />
+                        <span className={`text-[9px] hidden sm:block ${idx < project.current_stage ? "text-primary" : "text-muted-foreground"}`}>
                           {label}
                         </span>
                       </div>

@@ -44,42 +44,42 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
         .split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
     const roleBadgeColor = {
-        admin: "bg-[#1B70FF]/15 text-[#6ba5ff] border-[#1B70FF]/25",
-        creative: "bg-purple-500/15 text-purple-400 border-purple-500/25",
-        client: "bg-white/5 text-white/40 border-white/10",
+        admin: "bg-primary/15 text-primary border-primary/25",
+        creative: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/25",
+        client: "bg-foreground/5 text-muted-foreground border-border",
     }[profile?.role || "client"];
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full bg-[#0a0a0a]">
+        <div className="flex flex-col h-full bg-card">
             {/* Logo */}
-            <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-white/[0.06]">
+            <div className="px-5 pt-5 pb-4 flex items-center justify-between border-b border-border">
                 <Link to="/" className="flex items-center gap-2.5 group">
-                    <div className="w-7 h-7 rounded-lg bg-[#1B70FF] flex items-center justify-center shadow-[0_0_14px_rgba(27,112,255,0.45)]">
-                        <span className="text-xs font-bold text-white">B</span>
+                    <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-brand">
+                        <span className="text-xs font-bold text-primary-foreground">B</span>
                     </div>
-                    <span className="text-sm font-semibold text-white tracking-tight">
-                        branding<span className="text-[#1B70FF]">.tn</span>
+                    <span className="text-sm font-semibold text-foreground tracking-tight">
+                        branding<span className="text-primary">.tn</span>
                     </span>
                 </Link>
                 {onClose && (
-                    <button onClick={onClose} className="text-white/30 hover:text-white transition-colors md:hidden">
+                    <button onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors md:hidden">
                         <X size={17} />
                     </button>
                 )}
             </div>
 
             {/* Profile card */}
-            <div className="px-4 py-4 border-b border-white/[0.06]">
-                <div className="flex items-center gap-3 p-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                    <div className="w-8 h-8 rounded-full bg-[#1B70FF]/20 border border-[#1B70FF]/30 flex items-center justify-center overflow-hidden shrink-0">
+            <div className="px-4 py-4 border-b border-border">
+                <div className="flex items-center gap-3 p-2 rounded-xl bg-muted/50 border border-border">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden shrink-0">
                         {profile?.avatar_url ? (
                             <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
-                            <span className="text-xs font-bold text-[#6ba5ff]">{initials}</span>
+                            <span className="text-xs font-bold text-primary">{initials}</span>
                         )}
                     </div>
                     <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-white truncate">{profile?.full_name || user?.email}</p>
+                        <p className="text-sm font-semibold text-foreground truncate">{profile?.full_name || user?.email}</p>
                         <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border capitalize ${roleBadgeColor}`}>
                             {profile?.role || "client"}
                         </span>
@@ -89,7 +89,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
 
             {/* Nav */}
             <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                <p className="text-[10px] font-semibold text-white/25 uppercase tracking-widest px-3 mb-3">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest px-3 mb-3">
                     {profile?.role === "admin" ? "Admin Panel" : profile?.role === "creative" ? "Workspace" : "My Account"}
                 </p>
                 {items.map((item) => {
@@ -103,27 +103,27 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
                             className={cn(
                                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
                                 active
-                                    ? "bg-[#1B70FF]/10 text-white border border-[#1B70FF]/20"
-                                    : "text-white/40 hover:text-white hover:bg-white/[0.04]"
+                                    ? "bg-primary/10 text-foreground border border-primary/20"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                             )}
                         >
-                            <Icon size={16} className={active ? "text-[#1B70FF]" : "group-hover:text-white/70"} />
+                            <Icon size={16} className={active ? "text-primary" : "group-hover:text-foreground/70"} />
                             <span className="flex-1">{item.label}</span>
-                            {active && <div className="w-1 h-1 rounded-full bg-[#1B70FF]" />}
+                            {active && <div className="w-1 h-1 rounded-full bg-primary" />}
                         </Link>
                     );
                 })}
             </nav>
 
             {/* Bottom */}
-            <div className="p-3 border-t border-white/[0.06] space-y-2">
+            <div className="p-3 border-t border-border space-y-2">
                 {/* Lang toggle */}
-                <div className="flex gap-1 bg-white/[0.04] rounded-lg p-1 border border-white/[0.06]">
+                <div className="flex gap-1 bg-muted/50 rounded-lg p-1 border border-border">
                     {(["fr", "en"] as const).map(l => (
                         <button key={l} onClick={() => setLang(l)}
                             className={cn(
                                 "flex-1 py-1.5 rounded-md text-xs font-bold uppercase transition-all",
-                                lang === l ? "bg-white/10 text-white" : "text-white/25 hover:text-white/60"
+                                lang === l ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                             )}>
                             {l}
                         </button>
@@ -131,7 +131,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
                 </div>
 
                 <button onClick={() => signOut()}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors w-full">
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full">
                     <LogOut size={15} />
                     {t("dashboard.signOut")}
                 </button>
@@ -142,7 +142,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
     return (
         <>
             {/* Desktop sidebar */}
-            <aside className="w-64 h-screen fixed left-0 top-0 z-30 hidden md:block border-r border-white/[0.06]">
+            <aside className="w-64 h-screen fixed left-0 top-0 z-30 hidden md:block border-r border-border">
                 <SidebarContent />
             </aside>
 
@@ -155,13 +155,13 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-40 md:hidden"
                     >
-                        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+                        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
                         <motion.aside
                             initial={{ x: -280 }}
                             animate={{ x: 0 }}
                             exit={{ x: -280 }}
                             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                            className="absolute left-0 top-0 bottom-0 w-72 border-r border-white/[0.06] shadow-2xl"
+                            className="absolute left-0 top-0 bottom-0 w-72 border-r border-border shadow-2xl"
                         >
                             <SidebarContent />
                         </motion.aside>

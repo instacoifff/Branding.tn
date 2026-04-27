@@ -287,7 +287,7 @@ const FilesVault = () => {
                                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                         <AlertDialogAction
                                                             onClick={() => handleDelete(file.id)}
-                                                            className="bg-destructive hover:bg-destructive/90 text-white"
+                                                            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                                                         >
                                                             Delete
                                                         </AlertDialogAction>

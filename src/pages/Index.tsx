@@ -84,7 +84,7 @@ export default function Index() {
   const { t } = useI18n();
 
   return (
-    <div className="page-dark min-h-screen bg-grid-lines overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground bg-grid-lines overflow-x-hidden">
       <Navbar />
 
       {/* ══════════════════════════════════════════
@@ -112,11 +112,10 @@ export default function Index() {
           <h1 className="text-5xl sm:text-6xl lg:text-[76px] font-semibold leading-[1.07] tracking-tight mb-7">
             <span className="headline-gradient">We Build Brands</span>
             <br />
-            <span className="text-white">That Actually Matter</span>
+            <span className="text-foreground">That Actually Matter</span>
           </h1>
 
-          {/* Subtext */}
-          <p className="text-[#9CA3AF] text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
             From strategy to execution — we craft premium brand identities that elevate businesses across Tunisia and beyond. Fast. Precise. Unforgettable.
           </p>
 
@@ -143,17 +142,17 @@ export default function Index() {
             transition={{ delay: 0.4, duration: 0.8 }}
             className="relative max-w-4xl mx-auto"
           >
-            <div className="glass-card p-1 shadow-[0_0_80px_rgba(27,112,255,0.12)]">
-              <div className="bg-[#0a0a0a] rounded-[14px] border border-white/5 aspect-[16/9] flex items-center justify-center overflow-hidden">
+            <div className="glass-card p-1 shadow-brand">
+              <div className="bg-card rounded-[14px] border border-border aspect-[16/9] flex items-center justify-center overflow-hidden">
                 {/* Simulated dashboard UI */}
                 <div className="w-full h-full p-6 grid grid-cols-3 gap-3">
                   {/* Sidebar sim */}
                   <div className="col-span-1 flex flex-col gap-2">
-                    <div className="h-8 rounded-lg bg-white/5 mb-2" />
+                    <div className="h-8 rounded-lg bg-muted/50 mb-2" />
                     {[80, 60, 70, 50, 65].map((w, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-md bg-white/10 shrink-0" />
-                        <div className={`h-3 rounded-full bg-white/8`} style={{ width: `${w}%` }} />
+                        <div className="w-4 h-4 rounded-md bg-muted shrink-0" />
+                        <div className={`h-3 rounded-full bg-muted`} style={{ width: `${w}%` }} />
                       </div>
                     ))}
                   </div>
@@ -165,16 +164,16 @@ export default function Index() {
                         { label: "Revenue", color: "bg-green-500/20", val: "48K TND" },
                         { label: "Clients", color: "bg-purple-500/20", val: "18" },
                       ].map((c) => (
-                        <div key={c.label} className={`${c.color} rounded-xl p-3 border border-white/5`}>
-                          <p className="text-xs text-white/40 mb-1">{c.label}</p>
-                          <p className="text-base font-bold text-white">{c.val}</p>
+                        <div key={c.label} className={`${c.color} rounded-xl p-3 border border-border`}>
+                          <p className="text-xs text-muted-foreground mb-1">{c.label}</p>
+                          <p className="text-base font-bold text-foreground">{c.val}</p>
                         </div>
                       ))}
                     </div>
                     {/* Chart sim */}
-                    <div className="flex-1 rounded-xl bg-white/4 border border-white/5 p-3 flex items-end gap-1.5">
+                    <div className="flex-1 rounded-xl bg-muted/20 border border-border p-3 flex items-end gap-1.5">
                       {[30, 55, 40, 70, 50, 85, 60, 90, 75, 95, 80, 100].map((h, i) => (
-                        <div key={i} className="flex-1 rounded-t" style={{ height: `${h * 0.7}%`, background: i === 11 ? "#1B70FF" : "rgba(27,112,255,0.25)" }} />
+                        <div key={i} className="flex-1 rounded-t" style={{ height: `${h * 0.7}%`, background: i === 11 ? "#1B70FF" : "currentColor", opacity: i === 11 ? 1 : 0.2 }} />
                       ))}
                     </div>
                   </div>
@@ -190,14 +189,14 @@ export default function Index() {
       {/* ══════════════════════════════════════════
           TRUSTED BY / LOGO CLOUD
       ══════════════════════════════════════════ */}
-      <section className="py-16 border-t border-white/[0.06]">
+      <section className="py-16 border-t border-border">
         <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-8">
-          <p className="text-[#6B7280] text-sm font-medium tracking-widest uppercase">
+          <p className="text-muted-foreground text-sm font-medium tracking-widest uppercase">
             Trusted by forward-thinking businesses
           </p>
           <div className="flex flex-wrap items-center justify-center gap-10">
             {TRUSTED_LOGOS.map((name) => (
-              <span key={name} className="logo-mono text-white/70 text-base font-semibold tracking-tight">
+              <span key={name} className="logo-mono text-foreground/70 text-base font-semibold tracking-tight">
                 {name}
               </span>
             ))}
@@ -208,7 +207,7 @@ export default function Index() {
       {/* ══════════════════════════════════════════
           STATS STRIP
       ══════════════════════════════════════════ */}
-      <section className="py-16 border-t border-white/[0.06]">
+      <section className="py-16 border-t border-border">
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((s, i) => (
@@ -221,8 +220,8 @@ export default function Index() {
                 transition={{ delay: i * 0.08 }}
                 className="text-center"
               >
-                <p className="text-4xl lg:text-5xl font-semibold text-white mb-2">{s.value}</p>
-                <p className="text-[#6B7280] text-sm">{s.label}</p>
+                <p className="text-4xl lg:text-5xl font-semibold text-foreground mb-2">{s.value}</p>
+                <p className="text-muted-foreground text-sm">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -232,12 +231,12 @@ export default function Index() {
       {/* ══════════════════════════════════════════
           SERVICES — BENTO GRID
       ══════════════════════════════════════════ */}
-      <section className="py-24 border-t border-white/[0.06]">
+      <section className="py-24 border-t border-border">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-            <p className="text-[#1B70FF] text-sm font-semibold uppercase tracking-widest mb-3">What We Do</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-white mb-4">One agency.<br />All your brand needs.</h2>
-            <p className="text-[#9CA3AF] text-lg max-w-xl mx-auto">From a single logo to your entire visual identity system — we deliver end-to-end branding that converts.</p>
+            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">What We Do</p>
+            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">One agency.<br />All your brand needs.</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">From a single logo to your entire visual identity system — we deliver end-to-end branding that converts.</p>
           </motion.div>
 
           <div className="grid lg:grid-cols-3 gap-4">
@@ -251,22 +250,22 @@ export default function Index() {
                 transition={{ delay: i * 0.1 }}
                 className={`glass-card p-7 flex flex-col gap-5 ${svc.col}`}
               >
-                <div className="w-11 h-11 rounded-xl bg-[#1B70FF]/10 border border-[#1B70FF]/20 flex items-center justify-center">
-                  <svc.icon size={20} className="text-[#1B70FF]" />
+                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <svc.icon size={20} className="text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-white mb-2">{svc.title}</h3>
-                  <p className="text-[#9CA3AF] text-sm leading-relaxed">{svc.desc}</p>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{svc.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{svc.desc}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {svc.tags.map((tag) => (
-                    <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/60">
+                    <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground">
                       {tag}
                     </span>
                   ))}
                 </div>
                 <div className="mt-auto flex items-center justify-between">
-                  <span className="text-[#1B70FF] text-sm font-semibold">{svc.price}</span>
+                  <span className="text-primary text-sm font-semibold">{svc.price}</span>
                   <Link to="/builder">
                     <button className="text-xs btn-outline-white px-3 py-1.5 rounded-lg flex items-center gap-1.5">
                       Get started <ArrowRight size={11} />
@@ -282,12 +281,12 @@ export default function Index() {
       {/* ══════════════════════════════════════════
           WHY US — FEATURE GRID
       ══════════════════════════════════════════ */}
-      <section className="py-24 border-t border-white/[0.06]">
+      <section className="py-24 border-t border-border">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-            <p className="text-[#1B70FF] text-sm font-semibold uppercase tracking-widest mb-3">Why Choose Us</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-white mb-4">Built different.<br />By design.</h2>
-            <p className="text-[#9CA3AF] text-lg max-w-xl mx-auto">We combine speed, precision, and genuine creative care into every project.</p>
+            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Why Choose Us</p>
+            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">Built different.<br />By design.</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">We combine speed, precision, and genuine creative care into every project.</p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -299,11 +298,11 @@ export default function Index() {
                 whileInView="show"
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.07 }}
-                className="glass-card p-6"
+                className="glass-card p-6 border border-border"
               >
                 <span className="text-2xl mb-4 block">{r.emoji}</span>
-                <h3 className="text-base font-semibold text-white mb-2">{r.title}</h3>
-                <p className="text-[#6B7280] text-sm leading-relaxed">{r.desc}</p>
+                <h3 className="text-base font-semibold text-foreground mb-2">{r.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{r.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -313,11 +312,11 @@ export default function Index() {
       {/* ══════════════════════════════════════════
           TESTIMONIALS
       ══════════════════════════════════════════ */}
-      <section className="py-24 border-t border-white/[0.06]">
+      <section className="py-24 border-t border-border">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-            <p className="text-[#1B70FF] text-sm font-semibold uppercase tracking-widest mb-3">What clients say</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-white">Trusted. Loved. Proven.</h2>
+            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">What clients say</p>
+            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground">Trusted. Loved. Proven.</h2>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -329,21 +328,21 @@ export default function Index() {
                 whileInView="show"
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="glass-card p-6 flex flex-col gap-5"
+                className="glass-card p-6 flex flex-col gap-5 border border-border"
               >
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, si) => (
-                    <Star key={si} size={14} className="text-[#1B70FF] fill-[#1B70FF]" />
+                    <Star key={si} size={14} className="text-primary fill-primary" />
                   ))}
                 </div>
-                <p className="text-[#D1D5DB] text-sm leading-relaxed flex-1">"{t.quote}"</p>
+                <p className="text-muted-foreground text-sm leading-relaxed flex-1">"{t.quote}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#1B70FF]/20 border border-[#1B70FF]/30 flex items-center justify-center text-[#6ba5ff] font-bold text-sm shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm shrink-0">
                     {t.avatar}
                   </div>
                   <div>
-                    <p className="text-white text-sm font-semibold">{t.name}</p>
-                    <p className="text-[#6B7280] text-xs">{t.role}</p>
+                    <p className="text-foreground text-sm font-semibold">{t.name}</p>
+                    <p className="text-muted-foreground text-xs">{t.role}</p>
                   </div>
                 </div>
               </motion.div>
@@ -355,18 +354,18 @@ export default function Index() {
       {/* ══════════════════════════════════════════
           CTA SECTION
       ══════════════════════════════════════════ */}
-      <section className="py-28 border-t border-white/[0.06]">
+      <section className="py-28 border-t border-border">
         <div className="max-w-4xl mx-auto px-6 text-center relative">
           <div className="blob-blue absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-40 pointer-events-none" />
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="relative z-10">
-            <div className="badge-pill mx-auto mb-8">
-              <Zap size={12} /> Start in under 5 minutes
+            <div className="badge-pill mx-auto mb-8 border-border">
+              <Zap size={12} className="text-primary" /> Start in under 5 minutes
             </div>
-            <h2 className="text-4xl lg:text-[60px] font-semibold leading-tight text-white mb-6">
+            <h2 className="text-4xl lg:text-[60px] font-semibold leading-tight text-foreground mb-6">
               Ready to build your<br />
               <span className="headline-gradient">dream brand?</span>
             </h2>
-            <p className="text-[#9CA3AF] text-lg max-w-xl mx-auto mb-10">
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-10">
               Use our interactive project builder. See real-time pricing, choose your services, and get started with just a 30% deposit.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
