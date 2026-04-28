@@ -43,6 +43,14 @@ const CreativeGuard = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const ClientGuard = ({ children }: { children: React.ReactNode }) => {
+  const { profile, loading } = useAuth();
+  if (loading) return null;
+  if (profile?.role === "admin") return <Navigate to="/dashboard/admin" replace />;
+  if (profile?.role === "creative") return <Navigate to="/dashboard/creative" replace />;
+  return <>{children}</>;
+};
+
 const App = () => (
   <I18nProvider>
     <QueryClientProvider client={queryClient}>
@@ -68,10 +76,10 @@ const App = () => (
                 }
               >
                 {/* Client routes */}
-                <Route index element={<Overview />} />
-                <Route path="projects" element={<Projects />} />
-                <Route path="projects/:id" element={<ProjectDetail />} />
-                <Route path="files" element={<Files />} />
+                <Route index element={<ClientGuard><Overview /></ClientGuard>} />
+                <Route path="projects" element={<ClientGuard><Projects /></ClientGuard>} />
+                <Route path="projects/:id" element={<ClientGuard><ProjectDetail /></ClientGuard>} />
+                <Route path="files" element={<ClientGuard><Files /></ClientGuard>} />
                 <Route path="settings" element={<Settings />} />
 
                 {/* Creative routes */}

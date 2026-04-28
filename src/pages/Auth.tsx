@@ -55,10 +55,16 @@ const Auth = () => {
   const [confirmEmail, setConfirmEmail] = useState(false);
 
   const navigate = useNavigate();
-  const { user, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } = useAuth();
+  const { user, profile, signInWithEmail, signUpWithEmail, signInWithGoogle, resetPassword } = useAuth();
   const { t, lang, setLang } = useI18n();
 
-  useEffect(() => { if (user) navigate("/dashboard"); }, [user, navigate]);
+  useEffect(() => { 
+    if (user && profile) {
+      if (profile.role === "admin") navigate("/dashboard/admin");
+      else if (profile.role === "creative") navigate("/dashboard/creative");
+      else navigate("/dashboard");
+    }
+  }, [user, profile, navigate]);
 
   const goTo = (next: Mode, direction = 1) => { setDir(direction); setMode(next); };
 
@@ -72,11 +78,10 @@ const Auth = () => {
         if (password.length < 8) { toast.error(t("auth.errorWeakPassword")); setLoading(false); return; }
         const { needsConfirmation } = await signUpWithEmail(email, password, name);
         if (needsConfirmation) { setConfirmEmail(true); toast.success(t("auth.toastAccountCreated")); }
-        else { toast.success(t("auth.toastAccountCreated")); navigate("/dashboard"); }
+        else { toast.success(t("auth.toastAccountCreated")); }
       } else if (mode === "signin") {
         await signInWithEmail(email, password);
         toast.success(t("auth.toastWelcome"));
-        navigate("/dashboard");
       } else if (mode === "forgot") {
         if (!email) { toast.error(t("auth.errorEnterEmail")); setLoading(false); return; }
         await resetPassword(email);
