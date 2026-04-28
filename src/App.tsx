@@ -17,6 +17,7 @@ import AllProjects from "./pages/dashboard/admin/AllProjects";
 import UsersList from "./pages/dashboard/admin/UsersList";
 import FilesVault from "./pages/dashboard/admin/FilesVault";
 import AdminProjectDetail from "./pages/dashboard/admin/AdminProjectDetail";
+import Inbox from "./pages/dashboard/admin/Inbox";
 import TeamMembers from "./pages/dashboard/admin/TeamMembers";
 import CreativeOverview from "./pages/dashboard/creative/CreativeOverview";
 import NotFound from "./pages/NotFound";
@@ -78,6 +79,7 @@ const App = () => (
 
                 {/* Admin routes */}
                 <Route path="admin" element={<AdminGuard><AdminOverview /></AdminGuard>} />
+                <Route path="admin/inbox" element={<AdminGuard><Inbox /></AdminGuard>} />
                 <Route path="admin/projects" element={<AdminGuard><AllProjects /></AdminGuard>} />
                 <Route path="admin/projects/:id" element={<AdminGuard><AdminProjectDetail /></AdminGuard>} />
                 <Route path="admin/users" element={<AdminGuard><UsersList /></AdminGuard>} />

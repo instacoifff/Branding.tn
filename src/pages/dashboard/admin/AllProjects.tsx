@@ -1,12 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
-import {
-    Search, Loader2, FolderOpen, Plus, ChevronRight,
-    Clock, PlayCircle, CheckCircle2, Filter, RefreshCw
-} from "lucide-react";
+import { Search, Loader2, FolderOpen, Plus, ChevronRight, Clock, PlayCircle, CheckCircle2, Filter, RefreshCw, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/i18n";
+import { toast } from "sonner";
 
 type Project = {
     id: string;
@@ -42,6 +40,8 @@ const SkeletonRow = () => (
     </div>
 );
 
+type ProfileOption = { id: string; full_name: string; };
+
 const AllProjects = () => {
     const { t } = useI18n();
     const [projects, setProjects] = useState<Project[]>([]);
@@ -49,6 +49,16 @@ const AllProjects = () => {
     const [filter, setFilter] = useState<string>("all");
     const [search, setSearch] = useState("");
     const [refreshing, setRefreshing] = useState(false);
+
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [clients, setClients] = useState<ProfileOption[]>([]);
+    const [creatives, setCreatives] = useState<ProfileOption[]>([]);
+
+    const [newTitle, setNewTitle] = useState("");
+    const [selectedClient, setSelectedClient] = useState("");
+    const [selectedCreative, setSelectedCreative] = useState("");
+    const [newPrice, setNewPrice] = useState("0");
+    const [adding, setAdding] = useState(false);
 
     const fetchProjects = useCallback(async (showRefresh = false) => {
         if (showRefresh) setRefreshing(true); else setLoading(true);
@@ -60,12 +70,47 @@ const AllProjects = () => {
         if (filter !== "all") query = query.eq("status", filter);
 
         const { data } = await query;
-        setProjects(data || []);
+        setProjects((data as any) || []);
+
+        // Also fetch profile options for the Add Modal
+        const [{ data: clientData }, { data: creativeData }] = await Promise.all([
+            supabase.from("profiles").select("id, full_name").eq("role", "client"),
+            supabase.from("profiles").select("id, full_name").eq("role", "creative")
+        ]);
+        setClients(clientData || []);
+        setCreatives(creativeData || []);
+
         setLoading(false);
         setRefreshing(false);
     }, [filter]);
 
     useEffect(() => { fetchProjects(); }, [fetchProjects]);
+
+    const handleCreateProject = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newTitle.trim() || !selectedClient) {
+            toast.error("Title and Client are required.");
+            return;
+        }
+        setAdding(true);
+        const { error } = await supabase.from("projects").insert({
+            title: newTitle.trim(),
+            client_id: selectedClient,
+            creative_id: selectedCreative || null,
+            total_price: parseFloat(newPrice) || 0,
+            status: "onboarding",
+            current_stage: 1
+        });
+        if (error) {
+            toast.error("Failed to create project");
+        } else {
+            toast.success("Project created successfully");
+            setShowAddModal(false);
+            setNewTitle(""); setSelectedClient(""); setSelectedCreative(""); setNewPrice("0");
+            fetchProjects(true);
+        }
+        setAdding(false);
+    };
 
     const filtered = projects.filter(p =>
         p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -98,11 +143,12 @@ const AllProjects = () => {
                         >
                             <RefreshCw size={15} className={refreshing ? "animate-spin text-primary" : "text-muted-foreground"} />
                         </button>
-                        <Link to="/dashboard/admin">
-                            <button className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all">
-                                <Plus size={15} /> New Project
-                            </button>
-                        </Link>
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all"
+                        >
+                            <Plus size={15} /> New Project
+                        </button>
                     </div>
                 </div>
 
@@ -257,6 +303,67 @@ const AllProjects = () => {
                     </div>
                 </motion.div>
             )}
+
+            {/* Add Project Modal */}
+            <AnimatePresence>
+                {showAddModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+                            className="bg-card border border-border rounded-xl shadow-xl w-full max-w-md overflow-hidden relative"
+                        >
+                            <div className="flex items-center justify-between p-5 border-b border-border bg-muted/20">
+                                <h3 className="font-semibold">Create New Project</h3>
+                                <button onClick={() => setShowAddModal(false)} className="text-muted-foreground hover:text-foreground">
+                                    <X size={18} />
+                                </button>
+                            </div>
+                            <form onSubmit={handleCreateProject} className="p-5 space-y-4">
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-medium">Project Name *</label>
+                                    <input required value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                                        placeholder="E.g. Logo Redesign" />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-medium">Assign Client *</label>
+                                    <select required value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+                                        <option value="">Select a Client</option>
+                                        {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-medium">Assign Creative (Optional)</label>
+                                    <select value={selectedCreative} onChange={(e) => setSelectedCreative(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+                                        <option value="">No delegation yet</option>
+                                        {creatives.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+                                    </select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-medium">Initial Price Estimate (TND)</label>
+                                    <input type="number" min="0" value={newPrice} onChange={(e) => setNewPrice(e.target.value)}
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                                </div>
+
+                                <div className="pt-2">
+                                    <button disabled={adding} type="submit"
+                                        className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold flex justify-center items-center gap-2 hover:opacity-90 disabled:opacity-50 transition-opacity">
+                                        {adding ? <Loader2 size={16} className="animate-spin" /> : "Create Project"}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

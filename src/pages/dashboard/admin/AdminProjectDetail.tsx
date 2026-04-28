@@ -333,6 +333,32 @@ const AdminProjectDetail = () => {
 
                 {/* Right: Tasks + Files */}
                 <div className="lg:col-span-2 space-y-5">
+                    {/* Manage Project Assignment */}
+                    <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Team Delegation</h2>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <select
+                                value={creativeId || ""}
+                                onChange={(e) => setCreativeId(e.target.value)}
+                                className="flex-1 bg-muted/50 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            >
+                                <option value="">No Creative Assigned (Open Project)</option>
+                                {creatives.map((c) => (
+                                    <option key={c.id} value={c.id}>{c.full_name}</option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="shrink-0 flex items-center justify-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                            >
+                                {saving ? <Loader2 size={16} className="animate-spin" /> : "Save Assignment"}
+                            </button>
+                        </div>
+                    </div>
+
                     {/* Client Brief */}
                     {project.creative_brief && (
                         <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
