@@ -89,7 +89,7 @@ const AdminProjectDetail = () => {
             if (!id) return;
             const [{ data: proj, error: projErr }, { data: fileData }, { data: taskData }, { data: teamData }, { data: creativesData }, { data: msgData }] =
                 await Promise.all([
-                    supabase.from("projects").select("*, profiles(full_name, company)").eq("id", id).single(),
+                    supabase.from("projects").select("*, profiles!client_id(full_name, company)").eq("id", id).single(),
                     supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
                     supabase.from("tasks").select("*").eq("project_id", id).order("created_at", { ascending: true }),
                     supabase.from("team_members").select("id, name, role").order("name"),

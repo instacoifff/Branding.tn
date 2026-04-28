@@ -71,7 +71,7 @@ const FilesVault = () => {
         if (showRefresh) setRefreshing(true); else setLoading(true);
         const { data, error } = await supabase
             .from("files")
-            .select("*, projects(id, title, profiles(full_name))")
+            .select("*, projects(id, title, profiles!client_id(full_name))")
             .order("uploaded_at", { ascending: false });
 
         if (error) toast.error(t("common.error"));

@@ -64,7 +64,7 @@ const AllProjects = () => {
         if (showRefresh) setRefreshing(true); else setLoading(true);
         let query = supabase
             .from("projects")
-            .select("id, title, status, current_stage, total_price, deposit_paid, created_at, profiles(full_name, company)")
+            .select("id, title, status, current_stage, total_price, deposit_paid, created_at, profiles!client_id(full_name, company)")
             .order("created_at", { ascending: false });
 
         if (filter !== "all") query = query.eq("status", filter);

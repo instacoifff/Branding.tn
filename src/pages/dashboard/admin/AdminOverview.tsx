@@ -49,7 +49,7 @@ const AdminOverview = () => {
             // Fetch recent projects with profiles
             const { data: projects } = await supabase
                 .from("projects")
-                .select("*, profiles(full_name)")
+                .select("*, profiles!client_id(full_name)")
                 .order("created_at", { ascending: false })
                 .limit(5);
 
