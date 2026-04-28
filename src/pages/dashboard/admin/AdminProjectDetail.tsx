@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import {
     ArrowLeft, Loader2, Save, Upload, FileText, Trash2, CheckCircle2,
-    Plus, X, Clock, PlayCircle, CheckSquare,
+    Plus, X, Clock, PlayCircle, CheckSquare, MessageSquare, Send
 } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/i18n";
@@ -13,17 +13,30 @@ import {
     AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Project = {
     id: string; title: string; status: "onboarding" | "active" | "completed";
     current_stage: number; total_price: number; deposit_paid: boolean;
     client_id: string;
+    creative_id: string | null;
+    creative_brief?: { industry?: string; description?: string; audience?: string; style?: string; references?: string; };
     created_at: string; services_selected?: any[];
     profiles: { full_name: string | null; company: string | null } | null;
 };
 type FileRow = { id: string; file_name: string; file_url: string; type: "concept" | "final"; uploaded_at: string; };
 type Task = { id: string; title: string; description: string | null; status: "todo" | "doing" | "done"; assigned_to: string | null; };
 type TeamMember = { id: string; name: string; role: string; };
+
+type ProjectMessage = {
+    id: string;
+    sender_id: string;
+    message: string;
+    created_at: string;
+    profiles?: { full_name: string; avatar_url: string };
+};
 
 const STAGE_LABELS = ["Brief", "Concepts", "Refinement", "Finalisation", "Delivery"];
 const TASK_STATUS_CYCLE: Record<Task["status"], Task["status"]> = { todo: "doing", doing: "done", done: "todo" };
@@ -55,6 +68,14 @@ const AdminProjectDetail = () => {
     const [status, setStatus] = useState<Project["status"]>("onboarding");
     const [stage, setStage] = useState(1);
     const [depositPaid, setDepositPaid] = useState(false);
+    const [creativeId, setCreativeId] = useState<string>("");
+
+    const [creatives, setCreatives] = useState<{ id: string; full_name: string }[]>([]);
+
+    // Messaging state
+    const [messages, setMessages] = useState<ProjectMessage[]>([]);
+    const [newMessage, setNewMessage] = useState("");
+    const [sendingMsg, setSendingMsg] = useState(false);
 
     // New task form state
     const [showTaskForm, setShowTaskForm] = useState(false);
@@ -66,36 +87,51 @@ const AdminProjectDetail = () => {
     useEffect(() => {
         const fetchData = async () => {
             if (!id) return;
-            const [{ data: proj, error: projErr }, { data: fileData }, { data: taskData }, { data: teamData }] =
+            const [{ data: proj, error: projErr }, { data: fileData }, { data: taskData }, { data: teamData }, { data: creativesData }, { data: msgData }] =
                 await Promise.all([
                     supabase.from("projects").select("*, profiles(full_name, company)").eq("id", id).single(),
                     supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
                     supabase.from("tasks").select("*").eq("project_id", id).order("created_at", { ascending: true }),
                     supabase.from("team_members").select("id, name, role").order("name"),
+                    supabase.from("profiles").select("id, full_name").eq("role", "creative"),
+                    supabase.from("project_messages").select("*, profiles(full_name, avatar_url)").eq("project_id", id).order("created_at", { ascending: true }),
                 ]);
 
             if (projErr || !proj) { toast.error(t("common.error")); navigate("/dashboard/admin/projects"); return; }
             // client_id comes from the project row itself — no secondary lookup needed
             setProject(proj as Project); setStatus(proj.status); setStage(proj.current_stage); setDepositPaid(proj.deposit_paid);
+            if (proj.creative_id) setCreativeId(proj.creative_id);
             setFiles(fileData ?? []); setTasks(taskData ?? []); setTeamMembers(teamData ?? []);
+            setCreatives((creativesData as any) ?? []);
+            setMessages((msgData as any) ?? []);
             setLoading(false);
         };
         fetchData();
+
+        const msgChannel = supabase.channel(`admin_project_detail_${id}`)
+            .on("postgres_changes", { event: "INSERT", schema: "public", table: "project_messages", filter: `project_id=eq.${id}` }, async payload => {
+                const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", payload.new.sender_id).single();
+                setMessages(prev => {
+                    if (prev.some(m => m.id === payload.new.id)) return prev;
+                    return [...prev, { ...payload.new, profiles: profile } as any];
+                });
+            }).subscribe();
+
+        return () => { supabase.removeChannel(msgChannel); };
     }, [id, navigate]);
 
     const handleSave = async () => {
         if (!id) return;
-        setSaving(true);
         const { error } = await supabase
             .from("projects")
-            .update({ status, current_stage: stage, deposit_paid: depositPaid, updated_at: new Date().toISOString() })
+            .update({ status, current_stage: stage, deposit_paid: depositPaid, creative_id: creativeId || null, updated_at: new Date().toISOString() })
             .eq("id", id);
 
         if (error) {
             toast.error(t("dashboard.adminProjectDetail.errorSave"));
         } else {
             toast.success(t("dashboard.adminProjectDetail.toastSaved"));
-            setProject((prev) => prev ? { ...prev, status, current_stage: stage, deposit_paid: depositPaid } : prev);
+            setProject((prev) => prev ? { ...prev, status, current_stage: stage, deposit_paid: depositPaid, creative_id: creativeId || null } : prev);
 
             // Use client_id directly from the project row — reliable, no secondary lookup
             if (project?.client_id) {
@@ -167,7 +203,48 @@ const AdminProjectDetail = () => {
         setDeletingTaskId(null);
     };
 
-    if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!newMessage.trim() || !currentUser || !id) return;
+        setSendingMsg(true);
+        const { error } = await supabase.from("project_messages").insert({
+            project_id: id,
+            sender_id: currentUser.id,
+            message: newMessage.trim(),
+        });
+        if (error) { toast.error("Failed to send message"); }
+        else { setNewMessage(""); }
+        setSendingMsg(false);
+    };
+
+    if (loading) return (
+        <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Skeleton Header */}
+            <div className="flex justify-between items-start">
+                <div className="space-y-3">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-8 w-64" />
+                    <Skeleton className="h-4 w-40" />
+                </div>
+                <Skeleton className="h-10 w-32 rounded-lg" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Skeleton Controls Column */}
+                <div className="lg:col-span-1 space-y-5">
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                    <Skeleton className="h-40 w-full rounded-xl" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                </div>
+                {/* Skeleton Tasks Column */}
+                <div className="lg:col-span-2 space-y-5">
+                    <Skeleton className="h-64 w-full rounded-xl" />
+                    <Skeleton className="h-48 w-full rounded-xl" />
+                </div>
+            </div>
+        </div>
+    );
     if (!project) return null;
 
     const progressPct = (stage / 5) * 100;
@@ -197,8 +274,18 @@ const AdminProjectDetail = () => {
             </motion.div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left: controls */}
                 <div className="lg:col-span-1 space-y-5">
+                    {/* Delegation */}
+                    <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+                        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Delegate Creative</h2>
+                        <select value={creativeId} onChange={(e) => setCreativeId(e.target.value)} className={inputClass}>
+                            <option value="">Unassigned</option>
+                            {creatives.map((c) => (
+                                <option key={c.id} value={c.id}>{c.full_name}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     {/* Status */}
                     <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
                         <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("dashboard.adminProjectDetail.status")}</h2>
@@ -246,6 +333,35 @@ const AdminProjectDetail = () => {
 
                 {/* Right: Tasks + Files */}
                 <div className="lg:col-span-2 space-y-5">
+                    {/* Client Brief */}
+                    {project.creative_brief && (
+                        <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+                            <h2 className="text-sm font-semibold mb-4 uppercase tracking-wider text-muted-foreground">Client Strategy Debrief</h2>
+                            <div className="grid sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <p className="text-xs font-semibold text-primary">Industry</p>
+                                    <p className="text-sm font-medium">{project.creative_brief.industry || "—"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-semibold text-primary">Target Audience</p>
+                                    <p className="text-sm font-medium">{project.creative_brief.audience || "—"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-semibold text-primary">Design Style</p>
+                                    <p className="text-sm font-medium">{project.creative_brief.style || "—"}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-xs font-semibold text-primary">References</p>
+                                    <p className="text-sm font-medium">{project.creative_brief.references || "—"}</p>
+                                </div>
+                                <div className="space-y-1 sm:col-span-2 mt-2 pt-2 border-t border-border/50">
+                                    <p className="text-xs font-semibold text-primary">General Description</p>
+                                    <p className="text-sm">{project.creative_brief.description || "—"}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Tasks Section */}
                     <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
@@ -277,7 +393,11 @@ const AdminProjectDetail = () => {
                         </AnimatePresence>
 
                         {tasks.length === 0 ? (
-                            <div className="p-8 text-center text-sm text-muted-foreground">No tasks yet — Add the first one above.</div>
+                            <EmptyState
+                                title="No tasks created"
+                                description="Kick off the project by adding actionable tasks for your team."
+                                className="border-0 shadow-none rounded-none rounded-b-xl"
+                            />
                         ) : (
                             <div className="divide-y divide-border">
                                 {tasks.map((task) => (
@@ -349,7 +469,11 @@ const AdminProjectDetail = () => {
                             <h2 className="text-sm font-semibold">{t("dashboard.adminProjectDetail.files")} ({files.length})</h2>
                         </div>
                         {files.length === 0 ? (
-                            <div className="p-8 text-center text-muted-foreground text-sm">{t("dashboard.adminProjectDetail.noFiles")}</div>
+                            <EmptyState
+                                title="No files uploaded"
+                                description="You haven't uploaded any presentations or concepts yet."
+                                className="border-0 shadow-none rounded-none rounded-b-xl"
+                            />
                         ) : (
                             <div className="divide-y divide-border">
                                 {files.map((file) => (
@@ -395,6 +519,68 @@ const AdminProjectDetail = () => {
                             </div>
                         )}
                     </div>
+                </div>
+            </div>
+
+            {/* --- Discussion / Project Messages --- */}
+            <div className="mt-6 border border-border bg-card shadow-sm rounded-xl overflow-hidden flex flex-col" style={{ height: "450px" }}>
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between shadow-sm z-10 shrink-0">
+                    <div className="flex items-center gap-2">
+                        <MessageSquare size={16} className="text-primary" />
+                        <h2 className="text-sm font-semibold">{t("brief.discussion") || "Project Discussion"}</h2>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-muted/10">
+                    {messages.length === 0 ? (
+                        <p className="text-center text-sm text-muted-foreground my-8">No messages yet. Send a note to the client or creative.</p>
+                    ) : (
+                        messages.map((msg) => {
+                            const isMe = msg.profiles?.full_name && project?.profiles?.full_name && msg.profiles.full_name !== project.profiles.full_name; // Rough heuristic, Admins sending vs clients. Realistically check IDs, but since we are Admin, ANY message that isn't the client could be us/our team. Let's do it clean:
+                            return (
+                                <div key={msg.id} className="flex gap-3">
+                                    <Avatar className="h-8 w-8 border border-border shrink-0">
+                                        <AvatarImage src={msg.profiles?.avatar_url || ""} />
+                                        <AvatarFallback>{msg.profiles?.full_name?.charAt(0) || "?"}</AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex flex-col items-start">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[11px] font-medium text-muted-foreground">{msg.profiles?.full_name || "Unknown User"}</span>
+                                            <span className="text-[10px] text-muted-foreground/60">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        </div>
+                                        <div className="px-4 py-2.5 rounded-2xl text-sm max-w-[90%] whitespace-pre-wrap bg-card border border-border rounded-tl-none">
+                                            {msg.message}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+
+                <div className="p-4 bg-card border-t border-border shrink-0">
+                    <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+                        <textarea
+                            className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                            placeholder="Type your message..."
+                            rows={1}
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendMessage(e);
+                                }
+                            }}
+                        />
+                        <button
+                            type="submit"
+                            disabled={!newMessage.trim() || sendingMsg}
+                            className="bg-primary text-primary-foreground h-[46px] w-[46px] rounded-xl flex items-center justify-center shrink-0 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                        >
+                            {sendingMsg ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

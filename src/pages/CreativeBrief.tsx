@@ -49,6 +49,13 @@ const CreativeBrief = () => {
         client_id: user.id,
         title: form.company.trim(),
         services_selected: selectedServices,
+        creative_brief: {
+          industry: form.industry,
+          description: form.description,
+          audience: form.audience,
+          style: form.style,
+          references: form.references,
+        },
         total_price: total,
         deposit_paid: false,
         status: "onboarding",

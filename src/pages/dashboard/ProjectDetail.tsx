@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParams, Link } from "react-router-dom";
 import {
     ArrowLeft, Clock, CheckCircle2, FileText, Download, Loader2,
     FolderOpen, PlayCircle, CheckSquare, Image, Film, Archive, FileCode2,
-    MessageSquare
+    MessageSquare, Upload, Send
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useI18n } from "@/i18n";
 
 type Project = {
@@ -26,7 +30,7 @@ type FileRow = {
     id: string;
     file_name: string;
     file_url: string;
-    type: "concept" | "final";
+    type: "concept" | "final" | "inspiration";
     uploaded_at: string;
 };
 
@@ -35,6 +39,14 @@ type Task = {
     title: string;
     description: string | null;
     status: "todo" | "doing" | "done";
+};
+
+type ProjectMessage = {
+    id: string;
+    sender_id: string;
+    message: string;
+    created_at: string;
+    profiles?: { full_name: string; avatar_url: string };
 };
 
 const STATUS_COLORS = {
@@ -68,26 +80,32 @@ const ProjectDetail = () => {
     const [project, setProject] = useState<Project | null>(null);
     const [files, setFiles] = useState<FileRow[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [messages, setMessages] = useState<ProjectMessage[]>([]);
+    const [newMessage, setNewMessage] = useState("");
+    const [sendingMsg, setSendingMsg] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
             if (!user || !id) return;
-            const [{ data: proj }, { data: fileData }, { data: taskData }] = await Promise.all([
+            const [{ data: proj }, { data: fileData }, { data: taskData }, { data: msgData }] = await Promise.all([
                 supabase.from("projects").select("*").eq("id", id).eq("client_id", user.id).single(),
                 supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
                 supabase.from("tasks").select("id, title, description, status").eq("project_id", id).order("created_at"),
+                supabase.from("project_messages").select("*, profiles(full_name, avatar_url)").eq("project_id", id).order("created_at", { ascending: true }),
             ]);
 
             setProject(proj || null);
             setFiles(fileData || []);
             setTasks(taskData || []);
+            setMessages((msgData as any) || []);
             setLoading(false);
         };
         fetchData();
 
         // Real-time subscription for tasks updates
-        const channel = supabase
+        const taskChannel = supabase
             .channel(`project_detail_${id}`)
             .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `project_id=eq.${id}` }, payload => {
                 if (payload.eventType === "UPDATE") {
@@ -98,25 +116,93 @@ const ProjectDetail = () => {
                     setTasks(prev => prev.filter(t => t.id !== payload.old.id));
                 }
             })
+            .on("postgres_changes", { event: "INSERT", schema: "public", table: "project_messages", filter: `project_id=eq.${id}` }, async payload => {
+                // Fetch the profile associated with the new message
+                const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", payload.new.sender_id).single();
+                setMessages(prev => {
+                    // Prevent duplicates if we generated this message
+                    if (prev.some(m => m.id === payload.new.id)) return prev;
+                    return [...prev, { ...payload.new, profiles: profile } as any];
+                });
+            })
             .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
+        return () => { supabase.removeChannel(taskChannel); };
     }, [user, id]);
 
+    const handleInspirationUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !id) return;
+        setUploading(true);
+        const filePath = `projects/${id}/inspiration_${Date.now()}_${file.name}`;
+
+        try {
+            const { error: uploadError } = await supabase.storage.from("project-files").upload(filePath, file);
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = supabase.storage.from("project-files").getPublicUrl(filePath);
+
+            const { data: newFile, error: insertError } = await supabase.from("files")
+                .insert({ project_id: id, file_name: `[Inspiration] ${file.name}`, file_url: urlData.publicUrl, type: "inspiration" })
+                .select().single();
+
+            if (insertError) throw insertError;
+
+            // eslint-disable-next-line
+            toast.success("Inspiration uploaded successfully!");
+            setFiles(prev => [newFile as FileRow, ...prev]);
+        } catch (error) {
+            console.error("Upload error:", error);
+            // eslint-disable-next-line
+            toast.error("Failed to upload file.");
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
+    };
+
+    const handleSendMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newMessage.trim() || !user || !id) return;
+        setSendingMsg(true);
+        const { error } = await supabase.from("project_messages").insert({
+            project_id: id,
+            sender_id: user.id,
+            message: newMessage.trim(),
+        });
+        if (error) { toast.error("Failed to send message"); }
+        else { setNewMessage(""); }
+        setSendingMsg(false);
+    };
+
     if (loading) return (
-        <div className="flex items-center justify-center h-64">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <Skeleton className="h-4 w-24 mb-6" />
+            <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-6">
+                    <Skeleton className="h-48 w-full rounded-2xl" />
+                    <Skeleton className="h-32 w-full rounded-2xl" />
+                    <Skeleton className="h-64 w-full rounded-2xl" />
+                    <Skeleton className="h-40 w-full rounded-2xl" />
+                </div>
+                <div className="space-y-6">
+                    <Skeleton className="h-48 w-full rounded-2xl" />
+                    <Skeleton className="h-32 w-full rounded-2xl" />
+                </div>
+            </div>
         </div>
     );
 
     if (!project) return (
-        <div className="bg-card rounded-2xl border border-border p-12 text-center shadow-sm">
-            <FolderOpen size={40} className="mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Project not found</h3>
-            <Link to="/dashboard/projects" className="text-sm text-primary hover:underline">
-                {t("dashboard.projectDetailPage.back")}
-            </Link>
-        </div>
+        <EmptyState
+            title="Project not found"
+            description="We couldn't locate this project. It may have been deleted."
+            action={
+                <Link to="/dashboard/projects" className="text-sm font-medium text-primary hover:underline">
+                    {t("dashboard.projectDetailPage.back")}
+                </Link>
+            }
+        />
     );
 
     const progressPct = (project.current_stage / 5) * 100;
@@ -205,6 +291,90 @@ const ProjectDetail = () => {
                         </motion.div>
                     )}
 
+                    {/* Inspiration Upload box -- only for early stages */}
+                    {project.current_stage <= 2 && (
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                            className="bg-card rounded-2xl border border-border mt-6 shadow-sm overflow-hidden p-6">
+                            <h2 className="font-semibold mb-4 text-sm uppercase tracking-wider text-muted-foreground">Upload Inspirations</h2>
+                            <p className="text-xs text-muted-foreground mb-4">Share moodboards or references to guide our creative team perfectly.</p>
+                            <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-5 cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+                                <Upload size={20} className="text-muted-foreground" />
+                                <span className="text-sm font-medium">Click to Upload</span>
+                                <span className="text-xs text-muted-foreground">PNG, JPG, PDF, etc.</span>
+                                <input type="file" className="hidden" onChange={handleInspirationUpload} disabled={uploading} accept="image/*,.pdf" />
+                            </label>
+                            {uploading && (
+                                <div className="flex items-center gap-2 mt-3 text-sm text-primary font-medium">
+                                    <Loader2 size={14} className="animate-spin" /> Uploading securely...
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* Discussions / Internal Project Messaging */}
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }}
+                        className="bg-card rounded-2xl border border-border mt-6 shadow-sm overflow-hidden flex flex-col" style={{ maxHeight: "500px" }}>
+                        <div className="px-6 py-4 border-b border-border flex items-center justify-between shadow-sm z-10 shrink-0">
+                            <div className="flex items-center gap-2">
+                                <MessageSquare size={16} className="text-primary" />
+                                <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">{t("brief.discussion") || "Project Discussion"}</h2>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/10">
+                            {messages.length === 0 ? (
+                                <p className="text-center text-sm text-muted-foreground my-8">No messages yet. Say hello to your team!</p>
+                            ) : (
+                                messages.map((msg) => {
+                                    const isMe = msg.sender_id === user?.id;
+                                    return (
+                                        <div key={msg.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
+                                            <Avatar className="h-8 w-8 border border-border shrink-0">
+                                                <AvatarImage src={msg.profiles?.avatar_url || ""} />
+                                                <AvatarFallback>{msg.profiles?.full_name?.charAt(0) || "?"}</AvatarFallback>
+                                            </Avatar>
+                                            <div className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-[11px] font-medium text-muted-foreground">{isMe ? "You" : msg.profiles?.full_name}</span>
+                                                    <span className="text-[10px] text-muted-foreground/60">{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                                <div className={`px-4 py-2.5 rounded-2xl text-sm max-w-[90%] whitespace-pre-wrap ${isMe ? "bg-primary text-primary-foreground rounded-tr-none" : "bg-card border border-border rounded-tl-none"}`}>
+                                                    {msg.message}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        <div className="p-4 bg-card border-t border-border shrink-0">
+                            <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+                                <textarea
+                                    className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                                    placeholder="Type your message..."
+                                    rows={1}
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                    // Make Enter send message, Shift+Enter do newline
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            handleSendMessage(e);
+                                        }
+                                    }}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!newMessage.trim() || sendingMsg}
+                                    className="bg-primary text-primary-foreground h-[46px] w-[46px] rounded-xl flex items-center justify-center shrink-0 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                >
+                                    {sendingMsg ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                                </button>
+                            </form>
+                        </div>
+                    </motion.div>
+
                     {/* Tasks card — read-only for client */}
                     {tasks.length > 0 && (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
@@ -254,10 +424,11 @@ const ProjectDetail = () => {
                         </div>
 
                         {files.length === 0 ? (
-                            <div className="p-10 text-center">
-                                <FolderOpen size={32} className="mx-auto text-muted-foreground mb-3" />
-                                <p className="text-sm text-muted-foreground">{t("dashboard.projectDetailPage.noFiles")}</p>
-                            </div>
+                            <EmptyState
+                                title="No files yet"
+                                description={t("dashboard.projectDetailPage.noFiles")}
+                                className="border-0 shadow-none rounded-none rounded-b-xl"
+                            />
                         ) : (
                             <div className="divide-y divide-border">
                                 {files.map(file => {
@@ -271,7 +442,7 @@ const ProjectDetail = () => {
                                                 <p className="text-sm font-medium truncate">{file.file_name}</p>
                                                 <p className="text-xs text-muted-foreground">{new Date(file.uploaded_at).toLocaleDateString()}</p>
                                             </div>
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${file.type === "final" ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-purple-500/10 text-purple-600 border-purple-500/20"}`}>
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${file.type === "final" ? "bg-green-500/10 text-green-600 border-green-500/20" : file.type === "concept" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" : "bg-purple-500/10 text-purple-600 border-purple-500/20"}`}>
                                                 {file.type}
                                             </span>
                                             <a href={file.file_url} target="_blank" rel="noopener noreferrer"
