@@ -200,6 +200,7 @@ export async function deleteFileRecord(fileId: string) {
 
 /**
  * getProjectTeam — Fetches all team members assigned to a project's tasks.
+ * Now queries profiles directly (team_members table was deprecated in Track 23).
  */
 export async function getProjectTeam(projectId: string) {
     const { data: tasks, error: tasksError } = await supabase
@@ -213,13 +214,13 @@ export async function getProjectTeam(projectId: string) {
     const teamIds = Array.from(new Set(tasks?.map(t => t.assigned_to).filter(Boolean)));
     if (teamIds.length === 0) return [];
 
-    const { data: teamMembers, error: teamError } = await supabase
-        .from('team_members')
-        .select('*')
+    const { data: teamProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url, role')
         .in('id', teamIds);
 
-    if (teamError) throw teamError;
-    return teamMembers;
+    if (profilesError) throw profilesError;
+    return teamProfiles;
 }
 
 // ─────────────────────────────────────────────────────────────

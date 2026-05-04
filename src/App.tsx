@@ -18,7 +18,6 @@ import UsersList from "./pages/dashboard/admin/UsersList";
 import FilesVault from "./pages/dashboard/admin/FilesVault";
 import AdminProjectDetail from "./pages/dashboard/admin/AdminProjectDetail";
 import Inbox from "./pages/dashboard/admin/Inbox";
-import TeamMembers from "./pages/dashboard/admin/TeamMembers";
 import CreativeOverview from "./pages/dashboard/creative/CreativeOverview";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -92,7 +91,6 @@ const App = () => (
                 <Route path="admin/projects/:id" element={<AdminGuard><AdminProjectDetail /></AdminGuard>} />
                 <Route path="admin/users" element={<AdminGuard><UsersList /></AdminGuard>} />
                 <Route path="admin/files" element={<AdminGuard><FilesVault /></AdminGuard>} />
-                <Route path="admin/team" element={<AdminGuard><TeamMembers /></AdminGuard>} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

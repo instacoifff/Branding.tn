@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut, Users, Shield, X, UsersRound, Palette, ChevronRight, MessageSquare } from "lucide-react";
+import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut, Users, Shield, X, Palette, ChevronRight, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
@@ -24,7 +24,6 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
         { icon: FolderKanban, label: t("dashboard.allProjects"), href: "/dashboard/admin/projects" },
         { icon: MessageSquare, label: "Global Inbox", href: "/dashboard/admin/inbox" },
         { icon: Users, label: t("dashboard.users"), href: "/dashboard/admin/users" },
-        { icon: UsersRound, label: "Team Members", href: "/dashboard/admin/team" },
         { icon: Shield, label: t("dashboard.filesVault"), href: "/dashboard/admin/files" },
     ];
 

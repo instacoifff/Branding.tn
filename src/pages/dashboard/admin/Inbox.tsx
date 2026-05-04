@@ -44,15 +44,35 @@ const Inbox = () => {
     const [sendingMsg, setSendingMsg] = useState(false);
     const [loadingMessages, setLoadingMessages] = useState(false);
 
-    // Canned Responses
+    // Canned Responses with dynamic variables
     const [showCanned, setShowCanned] = useState(false);
+    const STAGE_LABELS = ["Brief", "Concepts", "Refinement", "Finalisation", "Delivery"];
+
     const cannedTemplates = [
-        "Your first wireframes are uploaded! Please review the files vault.",
-        "Can we schedule a quick call to discuss your creative brief?",
-        "I've assigned a creative to your project. They will start shortly.",
-        "Could you please clarify the main objective in the brief?",
-        "Project is moving to the next stage!"
+        "Hi {{client_name}}, your first wireframes for {{project_name}} are uploaded! Please review the files vault.",
+        "Hi {{client_name}}, can we schedule a quick call to discuss your creative brief for {{project_name}}?",
+        "Great news, {{client_name}}! I've assigned a creative to {{project_name}}. They will start shortly.",
+        "Hi {{client_name}}, could you please clarify the main objective in the brief for {{project_name}}?",
+        "{{project_name}} is moving to the next stage: {{stage_name}}! 🚀",
+        "Hi {{client_name}}, the total value for {{project_name}} is {{total_price}}. Let us know if you have any questions.",
+        "Hi {{client_name}}, all deliverables for {{project_name}} are ready for your review!",
     ];
+
+    const AVAILABLE_VARS = [
+        { key: "{{client_name}}", label: "Client Name" },
+        { key: "{{project_name}}", label: "Project Name" },
+        { key: "{{stage_name}}", label: "Current Stage" },
+        { key: "{{total_price}}", label: "Total Price" },
+    ];
+
+    const interpolateTemplate = (template: string): string => {
+        if (!activeProject) return template;
+        return template
+            .replace(/\{\{client_name\}\}/g, activeProject.profiles?.full_name || "there")
+            .replace(/\{\{project_name\}\}/g, activeProject.title || "your project")
+            .replace(/\{\{stage_name\}\}/g, STAGE_LABELS[activeProject.current_stage - 1] || "")
+            .replace(/\{\{total_price\}\}/g, (activeProject.total_price?.toLocaleString() || "0") + " TND");
+    };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -137,10 +157,11 @@ const Inbox = () => {
     };
 
     const insertTemplate = (text: string) => {
-        // Replace the last slash with the template
+        // Replace the last slash with the interpolated template
+        const interpolated = interpolateTemplate(text);
         const parts = newMessage.split("/");
         parts.pop();
-        setNewMessage((parts.join("/") + " " + text).trimStart());
+        setNewMessage((parts.join("/") + " " + interpolated).trimStart());
         setShowCanned(false);
         inputRef.current?.focus();
     };
@@ -284,18 +305,39 @@ const Inbox = () => {
                                 {showCanned && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                                        className="absolute bottom-full left-4 mb-2 w-80 bg-background border border-border shadow-2xl rounded-xl overflow-hidden z-20"
+                                        className="absolute bottom-full left-4 mb-2 w-96 bg-background border border-border shadow-2xl rounded-xl overflow-hidden z-20"
                                     >
-                                        <div className="p-2 border-b border-border bg-muted/30">
+                                        <div className="p-2.5 border-b border-border bg-muted/30 flex items-center justify-between">
                                             <p className="text-[10px] font-bold uppercase text-muted-foreground tracking-wider px-1">Quick Templates</p>
+                                            <div className="flex items-center gap-1">
+                                                {AVAILABLE_VARS.map(v => (
+                                                    <button
+                                                        key={v.key}
+                                                        onClick={() => {
+                                                            setNewMessage(prev => prev + v.key);
+                                                            inputRef.current?.focus();
+                                                        }}
+                                                        className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-mono font-semibold rounded hover:bg-primary/20 transition-colors"
+                                                        title={`Insert ${v.label}`}
+                                                    >
+                                                        {v.label}
+                                                    </button>
+                                                ))}
+                                            </div>
                                         </div>
-                                        <div className="max-h-48 overflow-y-auto p-1">
-                                            {cannedTemplates.map((t, i) => (
+                                        <div className="max-h-56 overflow-y-auto p-1">
+                                            {cannedTemplates.map((tmpl, i) => (
                                                 <button
-                                                    key={i} onClick={() => insertTemplate(t)}
-                                                    className="w-full text-left px-3 py-2 text-xs font-medium hover:bg-muted rounded-md transition-colors truncate"
+                                                    key={i}
+                                                    onClick={() => insertTemplate(tmpl)}
+                                                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-muted rounded-md transition-colors group"
                                                 >
-                                                    {t}
+                                                    <span className="font-medium text-foreground">
+                                                        {interpolateTemplate(tmpl)}
+                                                    </span>
+                                                    <span className="block text-[10px] text-muted-foreground mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity truncate">
+                                                        Template: {tmpl}
+                                                    </span>
                                                 </button>
                                             ))}
                                         </div>

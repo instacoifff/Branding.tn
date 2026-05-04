@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import {
     ArrowLeft, Loader2, Save, Upload, FileText, Trash2, CheckCircle2,
-    Plus, X, Clock, PlayCircle, CheckSquare, MessageSquare, Send
+    Plus, X, Clock, PlayCircle, CheckSquare, MessageSquare, Send,
+    Zap, RotateCcw, Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/i18n";
@@ -26,9 +27,8 @@ type Project = {
     created_at: string; services_selected?: any[];
     profiles: { full_name: string | null; company: string | null } | null;
 };
-type FileRow = { id: string; file_name: string; file_url: string; type: "concept" | "final"; uploaded_at: string; };
-type Task = { id: string; title: string; description: string | null; status: "todo" | "doing" | "done"; assigned_to: string | null; };
-type TeamMember = { id: string; name: string; role: string; };
+type FileRow = { id: string; file_name: string; file_url: string; type: "concept" | "final"; deliverable_status: "pending" | "approved" | "revision_requested" | null; revision_note: string | null; uploaded_at: string; };
+type Task = { id: string; title: string; description: string | null; status: "todo" | "doing" | "done"; assigned_to: string | null; profiles?: { full_name: string } | null; };
 
 type ProjectMessage = {
     id: string;
@@ -57,7 +57,6 @@ const AdminProjectDetail = () => {
     const [project, setProject] = useState<Project | null>(null);
     const [files, setFiles] = useState<FileRow[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
@@ -84,15 +83,18 @@ const AdminProjectDetail = () => {
     const [taskAssignee, setTaskAssignee] = useState("");
     const [addingTask, setAddingTask] = useState(false);
 
+    // Deliverable upload toggle
+    const [markAsDeliverable, setMarkAsDeliverable] = useState(false);
+
     useEffect(() => {
         const fetchData = async () => {
             if (!id) return;
             const [{ data: proj, error: projErr }, { data: fileData }, { data: taskData }, { data: teamData }, { data: creativesData }, { data: msgData }] =
                 await Promise.all([
                     supabase.from("projects").select("*, profiles!client_id(full_name, company)").eq("id", id).single(),
-                    supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
-                    supabase.from("tasks").select("*").eq("project_id", id).order("created_at", { ascending: true }),
-                    supabase.from("team_members").select("id, name, role").order("name"),
+                    supabase.from("files").select("id, file_name, file_url, type, deliverable_status, revision_note, uploaded_at").eq("project_id", id).order("uploaded_at", { ascending: false }),
+                    supabase.from("tasks").select("*, profiles!tasks_assigned_to_fkey(full_name)").eq("project_id", id).order("created_at", { ascending: true }),
+                    supabase.from("profiles").select("id, full_name").in("role", ["creative", "admin"]).order("full_name"),
                     supabase.from("profiles").select("id, full_name").eq("role", "creative"),
                     supabase.from("project_messages").select("*, profiles(full_name, avatar_url)").eq("project_id", id).order("created_at", { ascending: true }),
                 ]);
@@ -101,7 +103,7 @@ const AdminProjectDetail = () => {
             // client_id comes from the project row itself — no secondary lookup needed
             setProject(proj as Project); setStatus(proj.status); setStage(proj.current_stage); setDepositPaid(proj.deposit_paid);
             if (proj.creative_id) setCreativeId(proj.creative_id);
-            setFiles(fileData ?? []); setTasks(taskData ?? []); setTeamMembers(teamData ?? []);
+            setFiles(fileData ?? []); setTasks(taskData ?? []);
             setCreatives((creativesData as any) ?? []);
             setMessages((msgData as any) ?? []);
             setLoading(false);
@@ -119,6 +121,23 @@ const AdminProjectDetail = () => {
 
         return () => { supabase.removeChannel(msgChannel); };
     }, [id, navigate]);
+
+    // Realtime subscription for auto-progression updates
+    useEffect(() => {
+        if (!id) return;
+        const projChannel = supabase.channel(`admin_project_${id}`)
+            .on("postgres_changes", { event: "UPDATE", schema: "public", table: "projects", filter: `id=eq.${id}` }, payload => {
+                const updated = payload.new as any;
+                if (updated.current_stage !== stage || updated.status !== status) {
+                    setStage(updated.current_stage);
+                    setStatus(updated.status);
+                    setProject(prev => prev ? { ...prev, current_stage: updated.current_stage, status: updated.status } : prev);
+                    toast.info(`⚡ Auto-progression: Project moved to Stage ${updated.current_stage}`);
+                }
+            })
+            .subscribe();
+        return () => { supabase.removeChannel(projChannel); };
+    }, [id, stage, status]);
 
     const handleSave = async () => {
         if (!id) return;
@@ -156,12 +175,16 @@ const AdminProjectDetail = () => {
         const { error: uploadError } = await supabase.storage.from("project-files").upload(filePath, file);
         if (uploadError) { toast.error(t("dashboard.adminProjectDetail.errorUpload")); setUploading(false); return; }
         const { data: urlData } = supabase.storage.from("project-files").getPublicUrl(filePath);
+        const insertPayload: any = { project_id: id, file_name: file.name, file_url: urlData.publicUrl, type: fileType };
+        if (markAsDeliverable) {
+            insertPayload.deliverable_status = "pending";
+        }
         const { data: newFile, error: insertError } = await supabase.from("files")
-            .insert({ project_id: id, file_name: file.name, file_url: urlData.publicUrl, type: fileType })
+            .insert(insertPayload)
             .select().single();
         if (insertError) { toast.error(t("dashboard.adminProjectDetail.errorUpload")); }
-        else { toast.success(t("dashboard.adminProjectDetail.toastUploaded")); setFiles((prev) => [newFile, ...prev]); }
-        setUploading(false); e.target.value = "";
+        else { toast.success(markAsDeliverable ? "Deliverable uploaded — awaiting client review" : t("dashboard.adminProjectDetail.toastUploaded")); setFiles((prev) => [newFile, ...prev]); }
+        setUploading(false); e.target.value = ""; setMarkAsDeliverable(false);
     };
 
     const handleDeleteFile = async (fileId: string) => {
@@ -177,7 +200,7 @@ const AdminProjectDetail = () => {
         setAddingTask(true);
         const { data: newTask, error } = await supabase.from("tasks")
             .insert({ project_id: id, title: taskTitle.trim(), description: taskDesc || null, status: "todo", assigned_to: taskAssignee || null })
-            .select().single();
+            .select("*, profiles!tasks_assigned_to_fkey(full_name)").single();
         if (error) { toast.error(t("common.error")); }
         else {
             setTasks((prev) => [...prev, newTask]);
@@ -315,6 +338,11 @@ const AdminProjectDetail = () => {
                             </div>
                             <p className="text-xs text-muted-foreground mt-1.5">{Math.round(progressPct)}% {t("dashboard.adminProjectDetail.complete")}</p>
                         </div>
+                        {/* Auto-progress indicator */}
+                        <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+                            <Zap size={13} className="text-primary" />
+                            <span className="text-[11px] text-muted-foreground">Auto-progress is <span className="font-semibold text-primary">enabled</span> — stage advances when all tasks are done</span>
+                        </div>
                     </div>
                     {/* Payment */}
                     <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
@@ -406,7 +434,7 @@ const AdminProjectDetail = () => {
                                         <input value={taskDesc} onChange={(e) => setTaskDesc(e.target.value)} placeholder="Description (optional)" className={inputClass} />
                                         <select value={taskAssignee} onChange={(e) => setTaskAssignee(e.target.value)} className={inputClass}>
                                             <option value="">Assign to... (optional)</option>
-                                            {teamMembers.map((m) => <option key={m.id} value={m.id}>{m.name} — {m.role}</option>)}
+                                            {creatives.map((c) => <option key={c.id} value={c.id}>{c.full_name}</option>)}
                                         </select>
                                         <button onClick={handleAddTask} disabled={addingTask || !taskTitle.trim()}
                                             className="flex items-center gap-2 bg-gradient-brand text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-all shadow-brand disabled:opacity-50">
@@ -433,7 +461,7 @@ const AdminProjectDetail = () => {
                                             {task.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{task.description}</p>}
                                             {task.assigned_to && (
                                                 <p className="text-xs text-primary/70 mt-0.5">
-                                                    → {teamMembers.find((m) => m.id === task.assigned_to)?.name ?? "team member"}
+                                                    → {task.profiles?.full_name ?? "Assigned Member"}
                                                 </p>
                                             )}
                                         </div>
@@ -489,6 +517,22 @@ const AdminProjectDetail = () => {
                         )}
                     </div>
 
+                    {/* Deliverable toggle */}
+                    <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={markAsDeliverable}
+                                onChange={(e) => setMarkAsDeliverable(e.target.checked)}
+                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20"
+                            />
+                            <div>
+                                <p className="text-sm font-medium">Mark as deliverable</p>
+                                <p className="text-xs text-muted-foreground">Client will be asked to approve or request revisions</p>
+                            </div>
+                        </label>
+                    </div>
+
                     {/* File list */}
                     <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                         <div className="px-5 py-4 border-b border-border">
@@ -515,6 +559,22 @@ const AdminProjectDetail = () => {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
+                                            {file.deliverable_status && (
+                                                <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full border ${
+                                                    file.deliverable_status === 'approved' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
+                                                    file.deliverable_status === 'pending' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20 animate-pulse' :
+                                                    'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                                                }`}>
+                                                    {file.deliverable_status === 'approved' && <><CheckCircle2 size={10} /> Approved</>}
+                                                    {file.deliverable_status === 'pending' && <><Eye size={10} /> Pending Review</>}
+                                                    {file.deliverable_status === 'revision_requested' && <><RotateCcw size={10} /> Revision</>}
+                                                </span>
+                                            )}
+                                            {file.deliverable_status === 'revision_requested' && file.revision_note && (
+                                                <span className="text-[10px] text-orange-500 max-w-[150px] truncate" title={file.revision_note}>
+                                                    "{file.revision_note}"
+                                                </span>
+                                            )}
                                             <a href={file.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline font-medium">
                                                 {t("dashboard.adminProjectDetail.download")}
                                             </a>

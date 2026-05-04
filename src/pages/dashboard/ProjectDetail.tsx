@@ -7,12 +7,13 @@ import { useParams, Link } from "react-router-dom";
 import {
     ArrowLeft, Clock, CheckCircle2, FileText, Download, Loader2,
     FolderOpen, PlayCircle, CheckSquare, Image, Film, Archive, FileCode2,
-    MessageSquare, Upload, Send
+    MessageSquare, Upload, Send, Eye, RotateCcw
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useI18n } from "@/i18n";
+import DeliverableReviewOverlay from "@/components/dashboard/DeliverableReviewOverlay";
 
 type Project = {
     id: string;
@@ -31,6 +32,9 @@ type FileRow = {
     file_name: string;
     file_url: string;
     type: "concept" | "final" | "inspiration";
+    deliverable_status: "pending" | "approved" | "revision_requested" | null;
+    revision_note: string | null;
+    reviewed_at: string | null;
     uploaded_at: string;
 };
 
@@ -86,12 +90,15 @@ const ProjectDetail = () => {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
+    // Deliverable review
+    const [reviewFile, setReviewFile] = useState<FileRow | null>(null);
+
     useEffect(() => {
         const fetchData = async () => {
             if (!user || !id) return;
             const [{ data: proj }, { data: fileData }, { data: taskData }, { data: msgData }] = await Promise.all([
                 supabase.from("projects").select("*").eq("id", id).eq("client_id", user.id).single(),
-                supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
+                supabase.from("files").select("id, file_name, file_url, type, deliverable_status, revision_note, reviewed_at, uploaded_at").eq("project_id", id).order("uploaded_at", { ascending: false }),
                 supabase.from("tasks").select("id, title, description, status").eq("project_id", id).order("created_at"),
                 supabase.from("project_messages").select("*, profiles(full_name, avatar_url)").eq("project_id", id).order("created_at", { ascending: true }),
             ]);
@@ -210,6 +217,7 @@ const ProjectDetail = () => {
     const tasksPct = tasks.length > 0 ? Math.round((tasksDone / tasks.length) * 100) : 0;
 
     return (
+        <>
         <div>
             <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}>
                 <Link to="/dashboard/projects"
@@ -433,8 +441,13 @@ const ProjectDetail = () => {
                             <div className="divide-y divide-border">
                                 {files.map(file => {
                                     const FileIcon = getFileIcon(file.file_name);
+                                    const isPendingReview = file.deliverable_status === "pending";
                                     return (
-                                        <div key={file.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-muted/20 transition-colors">
+                                        <div
+                                            key={file.id}
+                                            className={`flex items-center gap-4 px-6 py-3.5 transition-colors ${isPendingReview ? 'hover:bg-primary/5 cursor-pointer' : 'hover:bg-muted/20'}`}
+                                            onClick={() => isPendingReview ? setReviewFile(file) : undefined}
+                                        >
                                             <div className="w-8 h-8 rounded-lg bg-muted/50 border border-border flex items-center justify-center shrink-0">
                                                 <FileIcon size={14} className="text-muted-foreground" />
                                             </div>
@@ -442,11 +455,25 @@ const ProjectDetail = () => {
                                                 <p className="text-sm font-medium truncate">{file.file_name}</p>
                                                 <p className="text-xs text-muted-foreground">{new Date(file.uploaded_at).toLocaleDateString()}</p>
                                             </div>
-                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize ${file.type === "final" ? "bg-green-500/10 text-green-600 border-green-500/20" : file.type === "concept" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" : "bg-purple-500/10 text-purple-600 border-purple-500/20"}`}>
+                                            {/* Deliverable status badges */}
+                                            {file.deliverable_status && (
+                                                <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-full border shrink-0 ${
+                                                    file.deliverable_status === 'approved' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
+                                                    file.deliverable_status === 'pending' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20 animate-pulse' :
+                                                    'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                                                }`}>
+                                                    {file.deliverable_status === 'approved' && <><CheckCircle2 size={10} /> Approved</>}
+                                                    {file.deliverable_status === 'pending' && <><Eye size={10} /> Review</>}
+                                                    {file.deliverable_status === 'revision_requested' && <><RotateCcw size={10} /> Revision Sent</>}
+                                                </span>
+                                            )}
+                                            <span className={`px-2 py-0.5 rounded-full text-xs font-medium border capitalize shrink-0 ${file.type === "final" ? "bg-green-500/10 text-green-600 border-green-500/20" : file.type === "concept" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" : "bg-purple-500/10 text-purple-600 border-purple-500/20"}`}>
                                                 {file.type}
                                             </span>
                                             <a href={file.file_url} target="_blank" rel="noopener noreferrer"
-                                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shrink-0">
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg border border-border hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all shrink-0"
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
                                                 <Download size={13} />
                                             </a>
                                         </div>
@@ -507,6 +534,25 @@ const ProjectDetail = () => {
                 </div>
             </div>
         </div>
+
+        {/* Deliverable Review Overlay */}
+        {reviewFile && (
+            <DeliverableReviewOverlay
+                file={reviewFile}
+                projectTitle={project.title}
+                isOpen={!!reviewFile}
+                onClose={() => setReviewFile(null)}
+                onReviewSubmitted={(fileId, action, note) => {
+                    setFiles(prev => prev.map(f =>
+                        f.id === fileId
+                            ? { ...f, deliverable_status: action as any, revision_note: note || null, reviewed_at: new Date().toISOString() }
+                            : f
+                    ));
+                    setReviewFile(null);
+                }}
+            />
+        )}
+    </>
     );
 };
 

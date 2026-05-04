@@ -75,19 +75,16 @@ const CreativeOverview = () => {
                 messages: p.project_messages?.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) || []
             }));
 
-            // Fallback: Also get tasks directly assigned to team_member (legacy logic)
-            const { data: teamMembers } = await supabase.from("team_members").select("id, name");
-            const myMember = teamMembers?.find((m) => m.name.toLowerCase() === (profile?.full_name ?? "").toLowerCase());
-
-            if (myMember) {
-                const { data: tasks } = await supabase.from("tasks").select("*, projects(id, title, creative_brief)").eq("assigned_to", myMember.id);
-                // Also get messages for these legacy task projects just in case
-                if (tasks && tasks.length > 0) {
-                    const legacyProjIds = [...new Set(tasks.map(t => t.project_id))];
-                    const { data: rawMessages } = await supabase.from("project_messages").select("*, profiles(full_name, avatar_url)").in("project_id", legacyProjIds).order("created_at", { ascending: true });
+            // Fetch tasks assigned specifically to this user on projects they don't own
+            const { data: assignedTasks } = await supabase.from("tasks").select("*, projects(id, title, creative_brief)").eq("assigned_to", user.id);
+            if (assignedTasks && assignedTasks.length > 0) {
+                const extraProjIds = [...new Set(assignedTasks.map(t => t.project_id))].filter(id => !mapped.some(p => p.id === id));
+                
+                if (extraProjIds.length > 0) {
+                    const { data: rawMessages } = await supabase.from("project_messages").select("*, profiles(full_name, avatar_url)").in("project_id", extraProjIds).order("created_at", { ascending: true });
                     const safeMsgs = rawMessages || [];
 
-                    (tasks || []).forEach((t: any) => {
+                    assignedTasks.forEach((t: any) => {
                         const existing = mapped.find(p => p.id === t.project_id);
                         if (!existing && t.projects) {
                             mapped.push({

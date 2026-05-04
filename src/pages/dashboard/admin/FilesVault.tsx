@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import {
     FileText, Download, Trash2, Loader2, Shield, Search,
-    Image, Archive, Film, FileCode2, RefreshCw, Upload, X
+    Image, Archive, Film, FileCode2, RefreshCw, Upload, X,
+    CheckCircle2, Eye, RotateCcw
 } from "lucide-react";
 import { toast } from "sonner";
 import { useI18n } from "@/i18n";
@@ -19,6 +20,8 @@ type VaultFile = {
     file_url: string;
     file_size?: number;
     type: "concept" | "final";
+    deliverable_status: "pending" | "approved" | "revision_requested" | null;
+    revision_note: string | null;
     uploaded_at: string;
     projects: { id: string; title: string; profiles: { full_name: string | null } | null } | null;
 };
@@ -63,6 +66,7 @@ const FilesVault = () => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [typeFilter, setTypeFilter] = useState<"all" | "concept" | "final">("all");
+    const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "revision_requested">("all");
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -100,7 +104,8 @@ const FilesVault = () => {
             f.projects?.title?.toLowerCase().includes(search.toLowerCase()) ||
             f.projects?.profiles?.full_name?.toLowerCase().includes(search.toLowerCase());
         const matchesType = typeFilter === "all" || f.type === typeFilter;
-        return matchesSearch && matchesType;
+        const matchesStatus = statusFilter === "all" || f.deliverable_status === statusFilter;
+        return matchesSearch && matchesType && matchesStatus;
     });
 
     return (
@@ -143,6 +148,15 @@ const FilesVault = () => {
                             </button>
                         ))}
                     </div>
+                    {/* Status filter pills */}
+                    <div className="flex gap-1 bg-muted/50 p-1 rounded-xl border border-border">
+                        {(["all", "pending", "approved", "revision_requested"] as const).map(st => (
+                            <button key={st} onClick={() => setStatusFilter(st)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${statusFilter === st ? "bg-card shadow-sm text-foreground border border-border" : "text-muted-foreground hover:text-foreground"}`}>
+                                {st === "all" ? "All Status" : st === "revision_requested" ? "Revisions" : st}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </motion.div>
 
@@ -176,11 +190,12 @@ const FilesVault = () => {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                     className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
                     {/* Table header */}
-                    <div className="grid grid-cols-[2fr_1.5fr_1fr_100px_90px_110px] gap-3 px-6 py-3 bg-muted/40 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <div className="grid grid-cols-[2fr_1.5fr_1fr_100px_100px_90px_110px] gap-3 px-6 py-3 bg-muted/40 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         <span>{t("dashboard.adminFiles.fileName")}</span>
                         <span>{t("dashboard.adminFiles.project")}</span>
                         <span>{t("dashboard.adminProjects.client")}</span>
                         <span>{t("dashboard.adminFiles.type")}</span>
+                        <span>Status</span>
                         <span>{t("dashboard.adminFiles.uploaded")}</span>
                         <span className="text-right">{t("dashboard.adminProjects.actions")}</span>
                     </div>
@@ -199,7 +214,7 @@ const FilesVault = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, x: -20 }}
                                     transition={{ delay: i * 0.025 }}
-                                    className="grid grid-cols-[2fr_1.5fr_1fr_100px_90px_110px] gap-3 px-6 py-4 border-b border-border last:border-0 hover:bg-muted/20 transition-colors items-center"
+                                    className="grid grid-cols-[2fr_1.5fr_1fr_100px_100px_90px_110px] gap-3 px-6 py-4 border-b border-border last:border-0 hover:bg-muted/20 transition-colors items-center"
                                 >
                                     {/* File name */}
                                     <div className="flex items-center gap-3 min-w-0">
@@ -238,6 +253,23 @@ const FilesVault = () => {
                                         <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border capitalize ${TYPE_COLORS[file.type]}`}>
                                             {file.type}
                                         </span>
+                                    </div>
+
+                                    {/* Deliverable Status */}
+                                    <div>
+                                        {file.deliverable_status ? (
+                                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border ${
+                                                file.deliverable_status === 'approved' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
+                                                file.deliverable_status === 'pending' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20 animate-pulse' :
+                                                'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                                            }`}>
+                                                {file.deliverable_status === 'approved' && <><CheckCircle2 size={9} /> OK</>}
+                                                {file.deliverable_status === 'pending' && <><Eye size={9} /> Pending</>}
+                                                {file.deliverable_status === 'revision_requested' && <><RotateCcw size={9} /> Revise</>}
+                                            </span>
+                                        ) : (
+                                            <span className="text-muted-foreground text-xs">—</span>
+                                        )}
                                     </div>
 
                                     {/* Date */}

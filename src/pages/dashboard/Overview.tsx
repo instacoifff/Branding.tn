@@ -3,8 +3,9 @@ import { motion } from "framer-motion";
 import { CheckCircle2, Clock, FolderOpen, PlayCircle, ArrowRight, Plus, Sparkles, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useI18n } from "@/i18n";
+import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
 
 type Project = {
   id: string;
@@ -13,6 +14,9 @@ type Project = {
   current_stage: number;
   total_price: number;
   deposit_paid: boolean;
+  brief_submitted: boolean;
+  brand_guidelines_uploaded: boolean;
+  kickoff_scheduled: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -43,6 +47,7 @@ const SkeletonCard = () => (
 const Overview = () => {
   const { user, profile } = useAuth();
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -62,6 +67,25 @@ const Overview = () => {
 
   const activeCount = projects.filter(p => p.status === "active").length;
   const completedCount = projects.filter(p => p.status === "completed").length;
+  const onboardingProject = projects.find(p => p.status === "onboarding");
+
+  const handleOnboardingAction = (action: string, projectId: string) => {
+    switch (action) {
+      case "brief_submitted":
+        navigate("/brief");
+        break;
+      case "deposit_paid":
+        // Will integrate with Stripe in Wave 3
+        navigate(`/dashboard/projects/${projectId}`);
+        break;
+      case "brand_guidelines_uploaded":
+        navigate(`/dashboard/projects/${projectId}`);
+        break;
+      case "kickoff_scheduled":
+        navigate(`/dashboard/projects/${projectId}`);
+        break;
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -81,6 +105,16 @@ const Overview = () => {
           Here's a real-time view of your active projects with branding.tn.
         </p>
       </motion.div>
+
+      {/* ── Onboarding Checklist ── */}
+      {!loading && onboardingProject && (
+        <motion.div variants={fadeUp} initial="hidden" animate="show" className="mb-10">
+          <OnboardingChecklist
+            project={onboardingProject}
+            onAction={handleOnboardingAction}
+          />
+        </motion.div>
+      )}
 
       {/* ── KPI cards ── */}
       {!loading && (
