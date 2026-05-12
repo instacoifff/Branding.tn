@@ -331,18 +331,6 @@
     background: radial-gradient(ellipse, rgba(139,92,246,0.14) 0%, transparent 70%);
   }
 
-  /* ═══ GRID BG — THEME-AWARE ═══ */
-  .bg-grid-lines {
-    background-image:
-      linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
-    background-size: 80px 80px;
-  }
-  .dark .bg-grid-lines {
-    background-image:
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-  }
 
   /* ═══ LOGO MONO ═══ */
   .logo-mono {
@@ -356,27 +344,10 @@
     display: flex;
     width: max-content;
     animation: marquee 30s linear infinite;
+    will-change: transform;
   }
   @keyframes marquee {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
-  }
-
-  /* ═══ IMAGE SHINE ═══ */
-  .image-shine {
-    position: relative;
-    overflow: hidden;
-  }
-  .image-shine::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.03) 45%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 55%, transparent 60%);
-    background-size: 200% 100%;
-    animation: shine 4s ease-in-out infinite;
-  }
-  @keyframes shine {
-    0% { background-position: 200% center; }
-    100% { background-position: -200% center; }
   }
 }

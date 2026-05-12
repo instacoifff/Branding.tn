@@ -67,11 +67,10 @@ export default function Index() {
       <Navbar />
 
       {/* ═══ HERO ═══ */}
-      <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-28 pb-20 bg-grid-lines">
+      <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-28 pb-20">
         {/* Ambient glow */}
-        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] pointer-events-none">
+        <div className="absolute top-[-15%] left-1/2 -translate-x-1/2 w-[700px] h-[500px] pointer-events-none opacity-60">
           <div className="blob-blue absolute inset-0" />
-          <div className="blob-purple absolute top-20 right-0 w-[400px] h-[400px]" />
         </div>
 
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 max-w-5xl mx-auto">
@@ -117,8 +116,8 @@ export default function Index() {
           <motion.div initial={{ opacity: 0, y: 50, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.8, duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="relative max-w-[1000px] mx-auto">
-            <div className="relative rounded-2xl overflow-hidden shadow-epic image-shine border border-border">
-              <img src="/images/hero-showcase.png" alt="BrandingTN creative workspace" className="w-full" />
+            <div className="relative rounded-2xl overflow-hidden shadow-epic border border-border">
+              <img src="/images/hero-showcase.png" alt="BrandingTN creative workspace" className="w-full" loading="eager" decoding="async" />
               <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent" />
             </div>
             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-primary/5 blur-[80px] rounded-full" />
@@ -184,11 +183,11 @@ export default function Index() {
 
           <div className="space-y-6">
             {SERVICES.map((svc, i) => (
-              <motion.div key={svc.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+              <motion.div key={svc.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}
                 className="group rounded-3xl border border-border overflow-hidden hover:border-primary/20 transition-all duration-500 bg-card hover:shadow-card">
                 <div className={`grid ${i === 0 ? "lg:grid-cols-5" : "lg:grid-cols-2"} gap-0`}>
                   <div className={`${i === 0 ? "lg:col-span-3" : ""} relative overflow-hidden`}>
-                    <img src={svc.image} alt={svc.title} className="w-full h-72 lg:h-[340px] object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out" />
+                    <img src={svc.image} alt={svc.title} className="w-full h-72 lg:h-[340px] object-cover group-hover:scale-[1.01] transition-transform duration-500 will-change-transform" loading="lazy" decoding="async" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
                     <div className="absolute bottom-5 left-5">
                       <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/80 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
