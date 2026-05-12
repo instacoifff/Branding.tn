@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, CreditCard, Shield } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useI18n } from "@/i18n";
+import { useStripeCheckout } from "@/hooks/use-stripe-checkout";
 
 type SelectedService = { id: string; title: string; price: number };
 
@@ -29,6 +30,8 @@ const CreativeBrief = () => {
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
   const deposit = Math.round(total * 0.3);
 
+  const { startCheckout, loading: checkoutLoading } = useStripeCheckout();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -45,7 +48,7 @@ const CreativeBrief = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("projects").insert({
+      const { data: project, error } = await supabase.from("projects").insert({
         client_id: user.id,
         title: form.company.trim(),
         services_selected: selectedServices,
@@ -60,7 +63,7 @@ const CreativeBrief = () => {
         deposit_paid: false,
         status: "onboarding",
         current_stage: 1,
-      });
+      }).select().single();
 
       if (error) throw error;
 
@@ -68,7 +71,19 @@ const CreativeBrief = () => {
       sessionStorage.removeItem("builder_total");
 
       toast.success(t("brief.toastSuccess"));
-      navigate("/dashboard");
+
+      // If there's a deposit to pay, redirect to Stripe Checkout
+      if (deposit > 0 && project) {
+        await startCheckout({
+          projectId: project.id,
+          amountCents: Math.round(deposit * 100), // TND→EUR approximate or use EUR directly
+          currency: "eur",
+          clientEmail: user.email || "",
+          projectTitle: form.company.trim(),
+        });
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       toast.error(err.message || t("brief.errorSubmit"));
     } finally {
@@ -155,27 +170,31 @@ const CreativeBrief = () => {
               <h3 className="text-base font-semibold mb-3">{t("brief.paymentTitle")}</h3>
               {deposit > 0 && (
                 <p className="text-sm font-medium text-primary mb-3">
-                  {t("brief.amountDue")} <span className="text-lg font-bold">{deposit.toLocaleString()} {t("common.tnd")}</span>
+                  {t("brief.amountDue")} <span className="text-lg font-bold">€{deposit.toLocaleString()}</span>
                 </p>
               )}
               <div className="bg-muted rounded-xl p-4 mb-3">
-                <p className="text-xs font-medium text-muted-foreground mb-2">{t("brief.bankDetails")}</p>
-                <div className="space-y-1 text-sm">
-                  <p><span className="text-muted-foreground">{t("brief.bank")}:</span> <span className="font-medium">BIAT Tunisia</span></p>
-                  <p><span className="text-muted-foreground">{t("brief.account")}:</span> <span className="font-medium">XX XXX XXXXXXX XX</span></p>
-                  <p><span className="text-muted-foreground">{t("brief.iban")}:</span> <span className="font-medium">TN59 XXXX XXXX XXXX XXXX XX</span></p>
+                <div className="flex items-center gap-2 mb-2">
+                  <CreditCard size={14} className="text-primary" />
+                  <p className="text-xs font-medium text-foreground">Secure Online Payment via Stripe</p>
+                </div>
+                <div className="space-y-1.5 text-sm text-muted-foreground">
+                  <p>After submitting your brief, you'll be redirected to our secure payment page to complete your 30% deposit.</p>
+                  <div className="flex items-center gap-1.5 text-[11px] mt-2">
+                    <Shield size={11} className="text-green-500" />
+                    <span className="text-green-600 font-medium">256-bit SSL encrypted • Visa, Mastercard, AMEX accepted</span>
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground">{t("brief.bankNote")}</p>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || checkoutLoading}
               className="w-full flex items-center justify-center gap-2 bg-gradient-brand text-primary-foreground py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-brand disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
-              {loading ? t("brief.submitting") : t("brief.submit")}
+              {(loading || checkoutLoading) ? <Loader2 size={16} className="animate-spin" /> : <CreditCard size={16} />}
+              {(loading || checkoutLoading) ? t("brief.submitting") : deposit > 0 ? `Submit Brief & Pay €${deposit.toLocaleString()}` : t("brief.submit")}
             </button>
           </motion.form>
         </div>

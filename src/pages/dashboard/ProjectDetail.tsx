@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useI18n } from "@/i18n";
 import DeliverableReviewOverlay from "@/components/dashboard/DeliverableReviewOverlay";
+import { useStripeCheckout } from "@/hooks/use-stripe-checkout";
 
 type Project = {
     id: string;
@@ -89,6 +90,7 @@ const ProjectDetail = () => {
     const [sendingMsg, setSendingMsg] = useState(false);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const { startCheckout, loading: checkoutLoading } = useStripeCheckout();
 
     // Deliverable review
     const [reviewFile, setReviewFile] = useState<FileRow | null>(null);
@@ -248,9 +250,24 @@ const ProjectDetail = () => {
                                     <CheckCircle2 size={14} /> {t("dashboard.projectDetailPage.depositPaid")}
                                 </span>
                             ) : (
-                                <span className="text-sm text-orange-500 bg-orange-500/10 border border-orange-500/20 px-3 py-1.5 rounded-full shrink-0">
-                                    {t("dashboard.projectDetailPage.depositPending")}
-                                </span>
+                                <button
+                                    onClick={() => startCheckout({
+                                        projectId: project.id,
+                                        amountCents: Math.round(project.total_price * 0.3 * 100) || 5000,
+                                        currency: "eur",
+                                        clientEmail: user?.email || "",
+                                        projectTitle: project.title,
+                                    })}
+                                    disabled={checkoutLoading}
+                                    className="flex items-center gap-2 text-sm font-semibold text-white bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 px-4 py-2 rounded-full shadow-brand transition-all disabled:opacity-50 shrink-0"
+                                >
+                                    {checkoutLoading ? (
+                                        <Loader2 size={14} className="animate-spin" />
+                                    ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+                                    )}
+                                    Pay Deposit — €{((project.total_price * 0.3) || 50).toLocaleString()}
+                                </button>
                             )}
                         </div>
 

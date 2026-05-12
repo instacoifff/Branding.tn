@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, FolderOpen, PlayCircle, ArrowRight, Plus, Sparkles, TrendingUp } from "lucide-react";
+import { CheckCircle2, Clock, FolderOpen, PlayCircle, ArrowRight, Plus, Sparkles, TrendingUp, CreditCard, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useI18n } from "@/i18n";
+import { toast } from "sonner";
 import OnboardingChecklist from "@/components/dashboard/OnboardingChecklist";
+import { useStripeCheckout } from "@/hooks/use-stripe-checkout";
 
 type Project = {
   id: string;
@@ -48,8 +50,31 @@ const Overview = () => {
   const { user, profile } = useAuth();
   const { t } = useI18n();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const { startCheckout, loading: checkoutLoading } = useStripeCheckout();
+
+  // Handle payment redirect query params
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus === "success") {
+      toast.success("Payment received! 🎉", {
+        description: "Your deposit has been confirmed. Your creative team will start working immediately!",
+        duration: 6000,
+      });
+      searchParams.delete("payment");
+      searchParams.delete("project");
+      setSearchParams(searchParams, { replace: true });
+    } else if (paymentStatus === "cancelled") {
+      toast.info("Payment cancelled", {
+        description: "No charges were made. You can pay your deposit anytime.",
+        duration: 4000,
+      });
+      searchParams.delete("payment");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,15 +94,25 @@ const Overview = () => {
   const completedCount = projects.filter(p => p.status === "completed").length;
   const onboardingProject = projects.find(p => p.status === "onboarding");
 
-  const handleOnboardingAction = (action: string, projectId: string) => {
+  const handleOnboardingAction = async (action: string, projectId: string) => {
     switch (action) {
       case "brief_submitted":
         navigate("/brief");
         break;
-      case "deposit_paid":
-        // Will integrate with Stripe in Wave 3
-        navigate(`/dashboard/projects/${projectId}`);
+      case "deposit_paid": {
+        // Find the project to get pricing info
+        const proj = projects.find(p => p.id === projectId);
+        if (!proj) { navigate(`/dashboard/projects/${projectId}`); break; }
+        const depositCents = Math.round(proj.total_price * 0.3 * 100); // 30% in cents (EUR)
+        await startCheckout({
+          projectId,
+          amountCents: depositCents > 0 ? depositCents : 5000, // minimum €50 fallback
+          currency: "eur",
+          clientEmail: user?.email || "",
+          projectTitle: proj.title,
+        });
         break;
+      }
       case "brand_guidelines_uploaded":
         navigate(`/dashboard/projects/${projectId}`);
         break;
