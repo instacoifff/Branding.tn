@@ -23,7 +23,7 @@ type Project = {
     current_stage: number; total_price: number; deposit_paid: boolean;
     client_id: string;
     creative_id: string | null;
-    creative_brief?: { industry?: string; description?: string; audience?: string; style?: string; references?: string; };
+    creative_brief?: { industry?: string; description?: string; audience?: string; style?: string; references?: string; attachments?: { name: string; url: string; type: string; size: number }[] };
     created_at: string; services_selected?: any[];
     profiles: { full_name: string | null; company: string | null } | null;
 };
@@ -413,6 +413,38 @@ const AdminProjectDetail = () => {
                                     <p className="text-sm">{project.creative_brief.description || "—"}</p>
                                 </div>
                             </div>
+
+                            {/* ── Inspiration Attachments ── */}
+                            {project.creative_brief.attachments && project.creative_brief.attachments.length > 0 && (
+                                <div className="mt-6 pt-5 border-t border-border">
+                                    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                                        Client Inspiration Files ({project.creative_brief.attachments.length})
+                                    </h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                        {project.creative_brief.attachments.map((att, i) => (
+                                            <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
+                                                className="group rounded-lg border border-border bg-muted overflow-hidden hover:border-primary/30 transition-all">
+                                                {att.type.startsWith("image/") ? (
+                                                    <img src={att.url} alt={att.name} className="w-full h-24 object-cover group-hover:scale-105 transition-transform" />
+                                                ) : (
+                                                    <div className="w-full h-24 flex flex-col items-center justify-center gap-1 bg-muted">
+                                                        <span className="text-2xl">📄</span>
+                                                        <span className="text-[10px] text-muted-foreground uppercase font-medium">
+                                                            {att.name.split(".").pop()}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="p-2">
+                                                    <p className="text-xs font-medium text-foreground truncate">{att.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground">
+                                                        {att.size < 1024 * 1024 ? `${(att.size / 1024).toFixed(1)} KB` : `${(att.size / (1024 * 1024)).toFixed(1)} MB`}
+                                                    </p>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

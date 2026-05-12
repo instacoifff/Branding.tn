@@ -268,6 +268,31 @@ const CreativeOverview = () => {
                                             <p className="text-sm">{pg.creative_brief.description || "—"}</p>
                                         </div>
                                     </div>
+
+                                    {/* Inspiration Attachments */}
+                                    {pg.creative_brief.attachments && pg.creative_brief.attachments.length > 0 && (
+                                        <div className="mt-4 pt-4 border-t border-border">
+                                            <p className="text-xs font-semibold text-muted-foreground mb-2">
+                                                Inspiration Files ({pg.creative_brief.attachments.length})
+                                            </p>
+                                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                                {pg.creative_brief.attachments.map((att: any, i: number) => (
+                                                    <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
+                                                        className="group rounded-lg border border-border overflow-hidden hover:border-primary/30 transition-all">
+                                                        {att.type?.startsWith("image/") ? (
+                                                            <img src={att.url} alt={att.name} className="w-full h-20 object-cover group-hover:scale-105 transition-transform" />
+                                                        ) : (
+                                                            <div className="w-full h-20 flex flex-col items-center justify-center bg-muted">
+                                                                <span className="text-xl">📄</span>
+                                                                <span className="text-[9px] text-muted-foreground uppercase">{att.name?.split(".").pop()}</span>
+                                                            </div>
+                                                        )}
+                                                        <p className="text-[10px] p-1.5 truncate text-foreground">{att.name}</p>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
