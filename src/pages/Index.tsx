@@ -1,84 +1,100 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Zap, CheckCircle, Star, Sparkles, PenTool, Image, Share2 } from "lucide-react";
+import { ArrowRight, Zap, CheckCircle, Star, Sparkles, PenTool, Image, Share2, Shield, Clock, Users, Award, TrendingUp, Heart } from "lucide-react";
 import { useI18n } from "@/i18n";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-/* ── Trusted partner logo replacements — text-based for demo ── */
-const TRUSTED_LOGOS = [
-  "Decathlon", "Toyota", "AXA", "KPMG", "L'Oréal", "Nestlé",
-];
-
-/* ── Stats ── */
-const STATS = [
-  { value: "500+", label: "Projects Delivered" },
-  { value: "98%", label: "Satisfaction Rate" },
-  { value: "120+", label: "Happy Clients" },
-  { value: "7 days", label: "Average Turnaround" },
-];
-
-/* ── Services bento grid ── */
+/* ── Services with real mockups ── */
 const SERVICES = [
   {
     icon: PenTool,
     title: "Logo Design",
-    desc: "Timeless marks that define identity. Multiple concepts, unlimited revisions, all file formats.",
-    tags: ["Vector Files", "Brand Book", "Unlimited Revisions"],
+    desc: "Your logo is the first thing customers see — and the last thing they forget. We craft timeless, versatile marks that work at every size, on every surface, and in every context.",
+    tags: ["3 Unique Concepts", "Unlimited Revisions", "All Vector Formats", "Brand Mark + Wordmark"],
     col: "lg:col-span-2",
-    price: "From 1,200 TND",
+    price: "From €450",
+    image: "/images/logo-mockup.png",
+    stat: "94% of first impressions are design-related",
   },
   {
     icon: Image,
     title: "Brand Identity",
-    desc: "Complete visual systems — from color palettes to typography — that tell your brand story consistently.",
-    tags: ["Color Palette", "Typography", "Stationery"],
+    desc: "A logo alone isn't a brand. We build complete visual systems — color palettes, typography, stationery, and brand guidelines — so every touchpoint tells the same story.",
+    tags: ["Color System", "Typography", "Stationery Suite", "Brand Guidelines PDF"],
     col: "lg:col-span-1",
-    price: "From 2,800 TND",
+    price: "From €1,200",
+    image: "/images/brand-identity-mockup.png",
+    stat: "Consistent branding increases revenue by 23%",
   },
   {
     icon: Share2,
     title: "Social Media Kit",
-    desc: "Scroll-stopping assets designed for every major platform. Ready to post from day one.",
-    tags: ["Instagram", "LinkedIn", "Story Templates"],
+    desc: "Stop blending in. We design scroll-stopping social templates that turn followers into customers — ready to post from day one across every platform.",
+    tags: ["Instagram Feed + Stories", "LinkedIn Banners", "Facebook Covers", "Editable Templates"],
     col: "lg:col-span-1",
-    price: "From 800 TND",
+    price: "From €350",
+    image: "/images/social-media-mockup.png",
+    stat: "Posts with branded visuals get 3x more engagement",
   },
 ];
 
-/* ── Why Us ── */
+/* ── Why Us — with persuasion logic ── */
 const REASONS = [
-  { emoji: "⚡", title: "7-Day Delivery", desc: "Get your brand assets fast without sacrificing quality." },
-  { emoji: "🎨", title: "Pixel-Perfect Craft", desc: "Every detail intentional — nothing left to chance." },
-  { emoji: "🔒", title: "Full Ownership", desc: "You own every file, every vector, forever — no strings." },
-  { emoji: "🔄", title: "Unlimited Revisions", desc: "We iterate until you're 100% satisfied. No extra cost." },
-  { emoji: "🌍", title: "Bilingual Agency", desc: "We work seamlessly in French & English, based in Tunisia." },
-  { emoji: "📊", title: "Client Dashboard", desc: "Track your project progress, files, and status in real time." },
+  { emoji: "⚡", title: "7-Day Delivery", desc: "While other agencies take weeks, we deliver your complete brand in just 7 business days. Speed without sacrifice." },
+  { emoji: "🎨", title: "Pixel-Perfect Craft", desc: "Every curve, every color, every detail is intentional. We don't do 'good enough' — we do exceptional." },
+  { emoji: "🔒", title: "100% Ownership", desc: "Every file, every vector, every asset is yours forever. No licensing fees. No strings attached. Full commercial rights." },
+  { emoji: "🔄", title: "Unlimited Revisions", desc: "We iterate until you're genuinely thrilled. Not just satisfied — thrilled. Revisions are free and unlimited." },
+  { emoji: "🌍", title: "FR + EN Bilingual", desc: "Based in Tunisia, serving the world. We work fluently in both French and English — zero friction." },
+  { emoji: "📊", title: "Live Client Portal", desc: "Track every stage of your project in real time. Upload files, review concepts, approve deliverables — all in one place." },
+];
+
+/* ── Process steps ── */
+const PROCESS = [
+  { step: "01", title: "Tell Us Your Vision", desc: "Use our interactive project builder to select services and submit your creative brief. Takes under 5 minutes.", icon: "💡" },
+  { step: "02", title: "We Design & Iterate", desc: "Our creative team gets to work immediately. You'll receive concepts within 72 hours, then we refine together.", icon: "🎨" },
+  { step: "03", title: "Review & Approve", desc: "Use your personal dashboard to review deliverables, request changes, and approve finals — all in one place.", icon: "✅" },
+  { step: "04", title: "Launch Your Brand", desc: "Download all files in every format you need. Your brand is ready to go live — and we're here if you need us.", icon: "🚀" },
 ];
 
 /* ── Testimonials ── */
 const TESTIMONIALS = [
   {
-    quote: "Branding.tn elevated our entire visual identity. The team is fast, precise, and genuinely creative.",
+    quote: "We went from a DIY logo to a complete premium identity in just 10 days. Our clients now treat us differently — the brand commands respect.",
     name: "Sarra Mansour",
     role: "CEO, Artisan Tunisia",
     avatar: "S",
+    result: "3x more client inquiries",
   },
   {
-    quote: "We rebranded in under 2 weeks. The logo, palette, and brand book exceeded every expectation.",
+    quote: "The dashboard alone sold me. Being able to see progress, approve files, and chat with the team in one place — no other agency offers this.",
     name: "Karim El Haj",
     role: "Co-Founder, NovaTech",
     avatar: "K",
+    result: "Rebranded in 2 weeks",
   },
   {
-    quote: "Professional, fast, bilingual. Exactly what a growing Tunisian company needs from a branding partner.",
+    quote: "Bilingual, professional, and incredibly fast. We needed Arabic + French + English brand assets and they delivered everything flawlessly.",
     name: "Leila Brahmi",
     role: "Marketing Director, Sahel Retail",
     avatar: "L",
+    result: "98% brand consistency score",
   },
 ];
 
+/* ── Trust logos ── */
+const TRUST_LOGOS = ["Decathlon", "Toyota", "AXA", "KPMG", "L'Oréal", "Nestlé"];
+
+/* ── Stats ── */
+const STATS = [
+  { value: "500+", label: "Projects Delivered", icon: Award },
+  { value: "98%", label: "Client Satisfaction", icon: Heart },
+  { value: "120+", label: "Happy Clients", icon: Users },
+  { value: "7 days", label: "Average Delivery", icon: Clock },
+];
+
 const fadeUp = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } };
+const stagger = { show: { transition: { staggerChildren: 0.08 } } };
 
 export default function Index() {
   const { t } = useI18n();
@@ -91,40 +107,35 @@ export default function Index() {
           HERO SECTION
       ══════════════════════════════════════════ */}
       <section className="relative flex flex-col items-center justify-center text-center pt-40 pb-28 px-6">
-        {/* Background blobs */}
         <div className="blob-blue absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] opacity-60 pointer-events-none" />
         <div className="blob-purple absolute top-20 left-1/2 -translate-x-1/2 translate-x-24 w-[500px] h-[400px] opacity-50 pointer-events-none" />
 
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-          transition={{ duration: 0.6 }}
-          className="relative z-10 max-w-5xl mx-auto"
-        >
-          {/* Badge */}
+        <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ duration: 0.6 }} className="relative z-10 max-w-5xl mx-auto">
           <div className="badge-pill mx-auto mb-8">
             <Sparkles size={12} className="text-blue-400" />
-            Premium Branding Agency · Tunisia
+            Premium Branding Agency · Tunisia 🇹🇳
           </div>
 
-          {/* Main headline */}
           <h1 className="text-5xl sm:text-6xl lg:text-[76px] font-semibold leading-[1.07] tracking-tight mb-7">
             <span className="headline-gradient">We Build Brands</span>
             <br />
-            <span className="text-foreground">That Actually Matter</span>
+            <span className="text-foreground">That Print Money</span>
           </h1>
 
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
-            From strategy to execution — we craft premium brand identities that elevate businesses across Tunisia and beyond. Fast. Precise. Unforgettable.
+          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-4">
+            From strategy to execution — we craft premium brand identities that make businesses unforgettable. Fast. Precise. Revenue-generating.
           </p>
 
-          {/* CTAs */}
+          {/* Social proof micro-stat */}
+          <p className="text-sm text-primary font-medium mb-10">
+            ⭐ Trusted by 120+ businesses across Tunisia & EMEA — 98% satisfaction rate
+          </p>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
             <Link to="/builder">
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 className="btn-blue flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-[15px]">
-                Start Your Project <ArrowRight size={16} />
+                Start Your Project — It's Free <ArrowRight size={16} />
               </motion.button>
             </Link>
             <Link to="/auth">
@@ -135,59 +146,18 @@ export default function Index() {
             </Link>
           </div>
 
-          {/* Dashboard preview screenshot placeholder — dark glass panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.8 }}
-            className="relative max-w-4xl mx-auto"
-          >
-            <div className="glass-card p-1 shadow-brand">
-              <div className="bg-card rounded-[14px] border border-border aspect-[16/9] flex items-center justify-center overflow-hidden">
-                {/* Simulated dashboard UI */}
-                <div className="w-full h-full p-6 grid grid-cols-3 gap-3">
-                  {/* Sidebar sim */}
-                  <div className="col-span-1 flex flex-col gap-2">
-                    <div className="h-8 rounded-lg bg-muted/50 mb-2" />
-                    {[80, 60, 70, 50, 65].map((w, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-md bg-muted shrink-0" />
-                        <div className={`h-3 rounded-full bg-muted`} style={{ width: `${w}%` }} />
-                      </div>
-                    ))}
-                  </div>
-                  {/* Content sim */}
-                  <div className="col-span-2 flex flex-col gap-3">
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { label: "Projects", color: "bg-blue-500/20", val: "24" },
-                        { label: "Revenue", color: "bg-green-500/20", val: "48K TND" },
-                        { label: "Clients", color: "bg-purple-500/20", val: "18" },
-                      ].map((c) => (
-                        <div key={c.label} className={`${c.color} rounded-xl p-3 border border-border`}>
-                          <p className="text-xs text-muted-foreground mb-1">{c.label}</p>
-                          <p className="text-base font-bold text-foreground">{c.val}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Chart sim */}
-                    <div className="flex-1 rounded-xl bg-muted/20 border border-border p-3 flex items-end gap-1.5">
-                      {[30, 55, 40, 70, 50, 85, 60, 90, 75, 95, 80, 100].map((h, i) => (
-                        <div key={i} className="flex-1 rounded-t" style={{ height: `${h * 0.7}%`, background: i === 11 ? "#1B70FF" : "currentColor", opacity: i === 11 ? 1 : 0.2 }} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+          {/* Hero showcase image */}
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8 }} className="relative max-w-4xl mx-auto">
+            <div className="glass-card p-1.5 shadow-brand">
+              <img src="/images/hero-showcase.png" alt="BrandingTN creative workspace showing brand design process" className="w-full rounded-[14px] border border-border" />
             </div>
-            {/* Glow below */}
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-blue-900/20 blur-3xl rounded-full" />
           </motion.div>
         </motion.div>
       </section>
 
       {/* ══════════════════════════════════════════
-          TRUSTED BY / LOGO CLOUD
+          TRUST STRIP
       ══════════════════════════════════════════ */}
       <section className="py-16 border-t border-border">
         <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-8">
@@ -195,31 +165,24 @@ export default function Index() {
             Trusted by forward-thinking businesses
           </p>
           <div className="flex flex-wrap items-center justify-center gap-10">
-            {TRUSTED_LOGOS.map((name) => (
-              <span key={name} className="logo-mono text-foreground/70 text-base font-semibold tracking-tight">
-                {name}
-              </span>
+            {TRUST_LOGOS.map((name) => (
+              <span key={name} className="logo-mono text-foreground/70 text-base font-semibold tracking-tight">{name}</span>
             ))}
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════
-          STATS STRIP
+          STATS
       ══════════════════════════════════════════ */}
       <section className="py-16 border-t border-border">
         <div className="max-w-5xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {STATS.map((s, i) => (
-              <motion.div
-                key={s.value}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="text-center"
-              >
+              <motion.div key={s.value} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="text-center">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-3">
+                  <s.icon size={18} className="text-primary" />
+                </div>
                 <p className="text-4xl lg:text-5xl font-semibold text-foreground mb-2">{s.value}</p>
                 <p className="text-muted-foreground text-sm">{s.label}</p>
               </motion.div>
@@ -229,48 +192,59 @@ export default function Index() {
       </section>
 
       {/* ══════════════════════════════════════════
-          SERVICES — BENTO GRID
+          SERVICES — WITH REAL MOCKUPS
       ══════════════════════════════════════════ */}
       <section className="py-24 border-t border-border">
-        <div className="max-w-5xl mx-auto px-6">
-          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">What We Do</p>
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Our Services</p>
             <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">One agency.<br />All your brand needs.</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">From a single logo to your entire visual identity system — we deliver end-to-end branding that converts.</p>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Every service includes unlimited revisions, all file formats, and a dedicated project dashboard.</p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-4">
+          <div className="space-y-8">
             {SERVICES.map((svc, i) => (
-              <motion.div
-                key={svc.title}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className={`glass-card p-7 flex flex-col gap-5 ${svc.col}`}
-              >
-                <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <svc.icon size={20} className="text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">{svc.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{svc.desc}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {svc.tags.map((tag) => (
-                    <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-auto flex items-center justify-between">
-                  <span className="text-primary text-sm font-semibold">{svc.price}</span>
-                  <Link to="/builder">
-                    <button className="text-xs btn-outline-white px-3 py-1.5 rounded-lg flex items-center gap-1.5">
-                      Get started <ArrowRight size={11} />
-                    </button>
-                  </Link>
+              <motion.div key={svc.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="glass-card overflow-hidden border border-border group hover:border-primary/30 transition-all duration-300">
+                <div className={`grid ${i === 0 ? "lg:grid-cols-5" : "lg:grid-cols-2"} gap-0`}>
+                  {/* Image */}
+                  <div className={`${i === 0 ? "lg:col-span-3" : ""} relative overflow-hidden`}>
+                    <img src={svc.image} alt={`${svc.title} mockup by BrandingTN`} className="w-full h-64 lg:h-80 object-cover group-hover:scale-[1.02] transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    {/* Stat overlay */}
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-white/90 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                        <TrendingUp size={11} /> {svc.stat}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Content */}
+                  <div className={`${i === 0 ? "lg:col-span-2" : ""} p-7 lg:p-8 flex flex-col justify-between`}>
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                          <svc.icon size={18} className="text-primary" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-foreground">{svc.title}</h3>
+                      </div>
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-5">{svc.desc}</p>
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {svc.tags.map((tag) => (
+                          <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground flex items-center gap-1">
+                            <CheckCircle size={10} className="text-green-500" /> {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-primary text-lg font-bold">{svc.price}</span>
+                      <Link to="/builder">
+                        <button className="btn-blue px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 font-semibold">
+                          Get Started <ArrowRight size={14} />
+                        </button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -279,33 +253,63 @@ export default function Index() {
       </section>
 
       {/* ══════════════════════════════════════════
-          WHY US — FEATURE GRID
+          HOW IT WORKS — PROCESS
+      ══════════════════════════════════════════ */}
+      <section className="py-24 border-t border-border">
+        <div className="max-w-5xl mx-auto px-6">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">How It Works</p>
+            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">From brief to brand<br />in 4 simple steps</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">No phone calls needed. No back-and-forth emails. Everything happens in your personal dashboard.</p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PROCESS.map((p, i) => (
+              <motion.div key={p.step} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="glass-card p-6 border border-border relative group hover:border-primary/30 transition-all">
+                <span className="text-[64px] font-black text-muted/30 absolute top-2 right-4 leading-none select-none group-hover:text-primary/10 transition-colors">{p.step}</span>
+                <span className="text-3xl mb-4 block">{p.icon}</span>
+                <h3 className="text-base font-semibold text-foreground mb-2 relative z-10">{p.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed relative z-10">{p.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          WHY US — PERSUASION SECTION
       ══════════════════════════════════════════ */}
       <section className="py-24 border-t border-border">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
             <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Why Choose Us</p>
             <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">Built different.<br />By design.</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">We combine speed, precision, and genuine creative care into every project.</p>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Every detail is engineered to give you a competitive advantage. Here's what makes us different.</p>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {REASONS.map((r, i) => (
-              <motion.div
-                key={r.title}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.07 }}
-                className="glass-card p-6 border border-border"
-              >
+              <motion.div key={r.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.07 }}
+                className="glass-card p-6 border border-border hover:border-primary/25 transition-all group">
                 <span className="text-2xl mb-4 block">{r.emoji}</span>
                 <h3 className="text-base font-semibold text-foreground mb-2">{r.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{r.desc}</p>
               </motion.div>
             ))}
           </div>
+
+          {/* Risk-reversal callout */}
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+            className="mt-10 glass-card p-6 border border-green-500/20 bg-green-500/[0.03] flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+            <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0">
+              <Shield size={22} className="text-green-500" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-foreground mb-1">100% Satisfaction Guarantee</h4>
+              <p className="text-muted-foreground text-sm">If you're not completely happy with the final result, we'll revise it for free until you are — or give you a full refund. Zero risk.</p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -315,27 +319,24 @@ export default function Index() {
       <section className="py-24 border-t border-border">
         <div className="max-w-5xl mx-auto px-6">
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">What clients say</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground">Trusted. Loved. Proven.</h2>
+            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Client Results</p>
+            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground">Real brands. Real impact.</h2>
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={t.name}
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="show"
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="glass-card p-6 flex flex-col gap-5 border border-border"
-              >
+              <motion.div key={t.name} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="glass-card p-6 flex flex-col gap-5 border border-border hover:border-primary/20 transition-all">
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, si) => (
                     <Star key={si} size={14} className="text-primary fill-primary" />
                   ))}
                 </div>
                 <p className="text-muted-foreground text-sm leading-relaxed flex-1">"{t.quote}"</p>
+                {/* Result badge */}
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full w-fit">
+                  <TrendingUp size={11} /> {t.result}
+                </span>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm shrink-0">
                     {t.avatar}
@@ -352,7 +353,7 @@ export default function Index() {
       </section>
 
       {/* ══════════════════════════════════════════
-          CTA SECTION
+          FINAL CTA
       ══════════════════════════════════════════ */}
       <section className="py-28 border-t border-border">
         <div className="max-w-4xl mx-auto px-6 text-center relative">
@@ -362,11 +363,14 @@ export default function Index() {
               <Zap size={12} className="text-primary" /> Start in under 5 minutes
             </div>
             <h2 className="text-4xl lg:text-[60px] font-semibold leading-tight text-foreground mb-6">
-              Ready to build your<br />
-              <span className="headline-gradient">dream brand?</span>
+              Your competitors already<br />
+              <span className="headline-gradient">have a brand. Do you?</span>
             </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-10">
-              Use our interactive project builder. See real-time pricing, choose your services, and get started with just a 30% deposit.
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-4">
+              Use our interactive project builder. See real-time pricing, choose your services, and launch your brand with just a 30% deposit.
+            </p>
+            <p className="text-sm text-muted-foreground mb-10">
+              💳 Secure payment via Stripe · 🔒 Full refund guarantee · ⚡ First concepts in 72 hours
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/builder">
