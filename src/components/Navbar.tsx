@@ -1,16 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ArrowRight, ChevronDown } from "lucide-react";
+import { Menu, X, ArrowRight, Sun, Moon } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const location = useLocation();
   const { lang, setLang } = useI18n();
   const { signOut, user } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -36,8 +37,8 @@ const Navbar = () => {
               <span className="font-black text-[14px] text-white tracking-tight">B</span>
             </div>
           </div>
-          <span className="text-[15px] font-semibold text-white/90 tracking-tight group-hover:text-white transition-colors">
-            branding<span className="text-blue-400">.tn</span>
+          <span className="text-[15px] font-semibold text-foreground tracking-tight group-hover:text-foreground/80 transition-colors">
+            branding<span className="text-primary">.tn</span>
           </span>
         </Link>
 
@@ -45,13 +46,13 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-1">
           {[
             { label: "Services", to: "/builder" },
-            { label: "Portfolio", to: "/builder", badge: false },
+            { label: "Portfolio", to: "/builder" },
             { label: "Pricing", to: "/builder" },
           ].map((item) => (
             <Link
               key={item.label}
               to={item.to}
-              className="relative px-4 py-2 text-[13px] text-white/55 hover:text-white/90 transition-colors font-medium rounded-lg hover:bg-white/[0.04]"
+              className="relative px-4 py-2 text-[13px] text-muted-foreground hover:text-foreground transition-colors font-medium rounded-lg hover:bg-muted/50"
             >
               {item.label}
             </Link>
@@ -61,15 +62,15 @@ const Navbar = () => {
         {/* ── Desktop right ── */}
         <div className="hidden md:flex items-center gap-2">
           {/* Lang toggle */}
-          <div className="flex items-center bg-white/[0.04] rounded-lg border border-white/[0.06] p-0.5 mr-1">
+          <div className="flex items-center bg-muted/50 rounded-lg border border-border p-0.5 mr-1">
             {(["fr", "en"] as const).map((l) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
                 className={`text-[11px] px-2.5 py-1 rounded-md font-semibold uppercase tracking-wider transition-all ${
                   lang === l
-                    ? "bg-white/10 text-white"
-                    : "text-white/35 hover:text-white/60"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {l}
@@ -77,11 +78,20 @@ const Navbar = () => {
             ))}
           </div>
 
+          {/* Theme toggle */}
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+
           {user ? (
             <>
               <button
                 onClick={() => signOut()}
-                className="text-[13px] px-4 py-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-all font-medium"
+                className="text-[13px] px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all font-medium"
               >
                 Sign Out
               </button>
@@ -94,7 +104,7 @@ const Navbar = () => {
           ) : (
             <>
               <Link to="/auth">
-                <button className="text-[13px] px-4 py-2 rounded-lg text-white/55 hover:text-white/90 hover:bg-white/[0.04] transition-all font-medium">
+                <button className="text-[13px] px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all font-medium">
                   Sign In
                 </button>
               </Link>
@@ -110,7 +120,7 @@ const Navbar = () => {
         {/* ── Mobile hamburger ── */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] transition-all"
+          className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-all"
           aria-label="Toggle menu"
         >
           {isOpen ? <X size={20} /> : <Menu size={20} />}
@@ -126,20 +136,20 @@ const Navbar = () => {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden overflow-hidden"
           >
-            <div className="navbar-glass border-t border-white/[0.04] px-6 py-6 space-y-1">
+            <div className="navbar-glass border-t border-border px-6 py-6 space-y-1">
               {["Services", "Portfolio", "Pricing"].map((label) => (
                 <Link
                   key={label}
                   to="/builder"
                   onClick={() => setIsOpen(false)}
-                  className="block text-[14px] text-white/60 hover:text-white py-2.5 px-3 rounded-lg hover:bg-white/[0.04] transition-all font-medium"
+                  className="block text-[14px] text-muted-foreground hover:text-foreground py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-all font-medium"
                 >
                   {label}
                 </Link>
               ))}
               <div className="pt-3 space-y-2">
                 <Link to="/auth" onClick={() => setIsOpen(false)}>
-                  <button className="w-full text-left text-[14px] text-white/60 hover:text-white py-2.5 px-3 rounded-lg hover:bg-white/[0.04] transition-all font-medium">
+                  <button className="w-full text-left text-[14px] text-muted-foreground hover:text-foreground py-2.5 px-3 rounded-lg hover:bg-muted/50 transition-all font-medium">
                     Sign In
                   </button>
                 </Link>
@@ -156,13 +166,19 @@ const Navbar = () => {
                     onClick={() => setLang(l)}
                     className={`text-xs px-3 py-1.5 rounded-lg font-semibold uppercase ${
                       lang === l
-                        ? "bg-white/10 text-white"
-                        : "text-white/35 hover:text-white/60"
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {l}
                   </button>
                 ))}
+                <button
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/50 transition-all ml-auto"
+                >
+                  {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+                </button>
               </div>
             </div>
           </motion.div>
