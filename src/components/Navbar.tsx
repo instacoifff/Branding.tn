@@ -1,8 +1,7 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sun, Moon, ArrowRight, ChevronDown } from "lucide-react";
+import { Menu, X, ArrowRight, ChevronDown } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import { useI18n } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -10,10 +9,8 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const { t, lang, setLang } = useI18n();
+  const { lang, setLang } = useI18n();
   const { signOut, user } = useAuth();
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -21,104 +18,152 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isDashboard = location.pathname.startsWith("/dashboard");
-
   return (
     <motion.nav
       initial={{ y: -8, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "navbar-glass" : "bg-transparent"
-        }`}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled ? "navbar-glass py-0" : "bg-transparent py-1"
+      }`}
     >
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-brand">
-            <span className="font-bold text-[13px] text-primary-foreground">B</span>
+      <div className="max-w-[1200px] mx-auto px-6 h-[60px] flex items-center justify-between">
+        {/* ── Logo ── */}
+        <Link to="/" className="flex items-center gap-2 shrink-0 group">
+          <div className="relative w-8 h-8">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute inset-0 rounded-xl flex items-center justify-center">
+              <span className="font-black text-[14px] text-white tracking-tight">B</span>
+            </div>
           </div>
-          <span className="text-base font-semibold text-foreground tracking-tight">
-            branding<span className="text-primary">.tn</span>
+          <span className="text-[15px] font-semibold text-white/90 tracking-tight group-hover:text-white transition-colors">
+            branding<span className="text-blue-400">.tn</span>
           </span>
         </Link>
 
-        {/* Desktop center nav */}
-        <div className="hidden md:flex items-center gap-7">
-          <Link to="/builder" className="text-[14px] text-muted-foreground hover:text-foreground transition-colors font-medium">
-            Services
-          </Link>
-          <div className="text-[14px] text-muted-foreground hover:text-foreground transition-colors font-medium flex items-center gap-1 cursor-default">
-            Pricing <ChevronDown size={13} />
-          </div>
-          <Link to="/auth" className="text-[14px] text-muted-foreground hover:text-foreground transition-colors font-medium">
-            {user ? "Dashboard" : "Sign In"}
-          </Link>
+        {/* ── Desktop nav ── */}
+        <div className="hidden md:flex items-center gap-1">
+          {[
+            { label: "Services", to: "/builder" },
+            { label: "Portfolio", to: "/builder", badge: false },
+            { label: "Pricing", to: "/builder" },
+          ].map((item) => (
+            <Link
+              key={item.label}
+              to={item.to}
+              className="relative px-4 py-2 text-[13px] text-white/55 hover:text-white/90 transition-colors font-medium rounded-lg hover:bg-white/[0.04]"
+            >
+              {item.label}
+            </Link>
+          ))}
         </div>
 
-        {/* Desktop right */}
-        <div className="hidden md:flex items-center gap-3">
-          {/* Lang */}
-          <div className="flex items-center gap-1">
-            <button onClick={() => setLang("fr")} className={`text-xs px-2 py-1 rounded transition-colors ${lang === "fr" ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"}`}>FR</button>
-            <button onClick={() => setLang("en")} className={`text-xs px-2 py-1 rounded transition-colors ${lang === "en" ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"}`}>EN</button>
+        {/* ── Desktop right ── */}
+        <div className="hidden md:flex items-center gap-2">
+          {/* Lang toggle */}
+          <div className="flex items-center bg-white/[0.04] rounded-lg border border-white/[0.06] p-0.5 mr-1">
+            {(["fr", "en"] as const).map((l) => (
+              <button
+                key={l}
+                onClick={() => setLang(l)}
+                className={`text-[11px] px-2.5 py-1 rounded-md font-semibold uppercase tracking-wider transition-all ${
+                  lang === l
+                    ? "bg-white/10 text-white"
+                    : "text-white/35 hover:text-white/60"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
           </div>
-          {/* Theme toggle */}
-          <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors" aria-label="Toggle theme">
-            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
-          </button>
 
           {user ? (
             <>
-              <button onClick={() => signOut()} className="btn-outline-white text-[13px] px-4 py-2 rounded-lg">
+              <button
+                onClick={() => signOut()}
+                className="text-[13px] px-4 py-2 rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.04] transition-all font-medium"
+              >
                 Sign Out
               </button>
               <Link to="/dashboard">
-                <button className="btn-blue text-[13px] px-4 py-2 rounded-lg flex items-center gap-1.5">
-                  Dashboard <ArrowRight size={13} />
+                <button className="btn-blue text-[13px] px-5 py-2 rounded-xl flex items-center gap-1.5">
+                  <span>Dashboard</span> <ArrowRight size={13} />
                 </button>
               </Link>
             </>
           ) : (
             <>
               <Link to="/auth">
-                <button className="btn-outline-white text-[13px] px-4 py-2 rounded-lg">Sign In</button>
+                <button className="text-[13px] px-4 py-2 rounded-lg text-white/55 hover:text-white/90 hover:bg-white/[0.04] transition-all font-medium">
+                  Sign In
+                </button>
               </Link>
               <Link to="/builder">
-                <button className="btn-blue text-[13px] px-4 py-2 rounded-lg flex items-center gap-1.5">
-                  Start Free <ArrowRight size={13} />
+                <button className="btn-blue text-[13px] px-5 py-2.5 rounded-xl flex items-center gap-1.5">
+                  <span>Start Project</span> <ArrowRight size={13} />
                 </button>
               </Link>
             </>
           )}
         </div>
 
-        {/* Mobile hamburger */}
-        <button onClick={() => setIsOpen(!isOpen)} className="md:hidden text-foreground" aria-label="Toggle menu">
-          {isOpen ? <X size={22} /> : <Menu size={22} />}
+        {/* ── Mobile hamburger ── */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg text-white/70 hover:text-white hover:bg-white/[0.06] transition-all"
+          aria-label="Toggle menu"
+        >
+          {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
 
-      {/* Mobile dropdown */}
+      {/* ── Mobile drawer ── */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden navbar-glass border-t border-white/[0.06] px-6 py-5 space-y-4 overflow-hidden"
+            className="md:hidden overflow-hidden"
           >
-            <Link to="/builder" onClick={() => setIsOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground py-1">Services</Link>
-            <Link to="/auth" onClick={() => setIsOpen(false)} className="block text-sm text-muted-foreground hover:text-foreground py-1">Sign In</Link>
-            <Link to="/builder" onClick={() => setIsOpen(false)}>
-              <button className="btn-blue w-full py-2.5 rounded-xl text-sm mt-2">Start Your Project</button>
-            </Link>
-            <div className="flex items-center gap-3 pt-1">
-              <button onClick={() => setLang("fr")} className={`text-xs px-2 py-1 rounded ${lang === "fr" ? "text-foreground font-bold" : "text-muted-foreground"}`}>FR</button>
-              <button onClick={() => setLang("en")} className={`text-xs px-2 py-1 rounded ${lang === "en" ? "text-foreground font-bold" : "text-muted-foreground"}`}>EN</button>
-              <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-foreground">
-                {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
-              </button>
+            <div className="navbar-glass border-t border-white/[0.04] px-6 py-6 space-y-1">
+              {["Services", "Portfolio", "Pricing"].map((label) => (
+                <Link
+                  key={label}
+                  to="/builder"
+                  onClick={() => setIsOpen(false)}
+                  className="block text-[14px] text-white/60 hover:text-white py-2.5 px-3 rounded-lg hover:bg-white/[0.04] transition-all font-medium"
+                >
+                  {label}
+                </Link>
+              ))}
+              <div className="pt-3 space-y-2">
+                <Link to="/auth" onClick={() => setIsOpen(false)}>
+                  <button className="w-full text-left text-[14px] text-white/60 hover:text-white py-2.5 px-3 rounded-lg hover:bg-white/[0.04] transition-all font-medium">
+                    Sign In
+                  </button>
+                </Link>
+                <Link to="/builder" onClick={() => setIsOpen(false)}>
+                  <button className="btn-blue w-full py-3 rounded-xl text-sm font-semibold">
+                    Start Your Project
+                  </button>
+                </Link>
+              </div>
+              <div className="flex items-center gap-2 pt-3">
+                {(["fr", "en"] as const).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => setLang(l)}
+                    className={`text-xs px-3 py-1.5 rounded-lg font-semibold uppercase ${
+                      lang === l
+                        ? "bg-white/10 text-white"
+                        : "text-white/35 hover:text-white/60"
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}

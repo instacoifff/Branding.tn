@@ -1,246 +1,250 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { ArrowRight, Zap, CheckCircle, Star, Sparkles, PenTool, Image, Share2, Shield, Clock, Users, Award, TrendingUp, Heart } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { ArrowRight, CheckCircle, Star, Sparkles, PenTool, Image, Share2, Shield, TrendingUp, ArrowUpRight, Play, Zap } from "lucide-react";
 import { useI18n } from "@/i18n";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useRef } from "react";
 
-/* ── Services with real mockups ── */
+/* ── Services ── */
 const SERVICES = [
   {
-    icon: PenTool,
-    title: "Logo Design",
-    desc: "Your logo is the first thing customers see — and the last thing they forget. We craft timeless, versatile marks that work at every size, on every surface, and in every context.",
+    icon: PenTool, title: "Logo Design",
+    desc: "Your logo is the handshake before the conversation. We craft timeless, versatile marks that work at every size, on every surface, in every context.",
     tags: ["3 Unique Concepts", "Unlimited Revisions", "All Vector Formats", "Brand Mark + Wordmark"],
-    col: "lg:col-span-2",
-    price: "From €450",
-    image: "/images/logo-mockup.png",
+    price: "€450", image: "/images/logo-mockup.png",
     stat: "94% of first impressions are design-related",
   },
   {
-    icon: Image,
-    title: "Brand Identity",
-    desc: "A logo alone isn't a brand. We build complete visual systems — color palettes, typography, stationery, and brand guidelines — so every touchpoint tells the same story.",
-    tags: ["Color System", "Typography", "Stationery Suite", "Brand Guidelines PDF"],
-    col: "lg:col-span-1",
-    price: "From €1,200",
-    image: "/images/brand-identity-mockup.png",
+    icon: Image, title: "Brand Identity",
+    desc: "A logo alone isn't a brand. We build complete visual systems — color, type, stationery, and a guidelines PDF — so every touchpoint is unmistakable.",
+    tags: ["Color System", "Typography", "Stationery Suite", "Brand Guidelines"],
+    price: "€1,200", image: "/images/brand-identity-mockup.png",
     stat: "Consistent branding increases revenue by 23%",
   },
   {
-    icon: Share2,
-    title: "Social Media Kit",
-    desc: "Stop blending in. We design scroll-stopping social templates that turn followers into customers — ready to post from day one across every platform.",
-    tags: ["Instagram Feed + Stories", "LinkedIn Banners", "Facebook Covers", "Editable Templates"],
-    col: "lg:col-span-1",
-    price: "From €350",
-    image: "/images/social-media-mockup.png",
-    stat: "Posts with branded visuals get 3x more engagement",
+    icon: Share2, title: "Social Media Kit",
+    desc: "Stop blending in. Scroll-stopping templates that turn followers into customers — ready to post across every platform from day one.",
+    tags: ["Instagram Feed + Stories", "LinkedIn", "Facebook", "Editable Templates"],
+    price: "€350", image: "/images/social-media-mockup.png",
+    stat: "Branded posts get 3× more engagement",
   },
 ];
 
-/* ── Why Us — with persuasion logic ── */
-const REASONS = [
-  { emoji: "⚡", title: "7-Day Delivery", desc: "While other agencies take weeks, we deliver your complete brand in just 7 business days. Speed without sacrifice." },
-  { emoji: "🎨", title: "Pixel-Perfect Craft", desc: "Every curve, every color, every detail is intentional. We don't do 'good enough' — we do exceptional." },
-  { emoji: "🔒", title: "100% Ownership", desc: "Every file, every vector, every asset is yours forever. No licensing fees. No strings attached. Full commercial rights." },
-  { emoji: "🔄", title: "Unlimited Revisions", desc: "We iterate until you're genuinely thrilled. Not just satisfied — thrilled. Revisions are free and unlimited." },
-  { emoji: "🌍", title: "FR + EN Bilingual", desc: "Based in Tunisia, serving the world. We work fluently in both French and English — zero friction." },
-  { emoji: "📊", title: "Live Client Portal", desc: "Track every stage of your project in real time. Upload files, review concepts, approve deliverables — all in one place." },
-];
-
-/* ── Process steps ── */
+/* ── Process ── */
 const PROCESS = [
-  { step: "01", title: "Tell Us Your Vision", desc: "Use our interactive project builder to select services and submit your creative brief. Takes under 5 minutes.", icon: "💡" },
-  { step: "02", title: "We Design & Iterate", desc: "Our creative team gets to work immediately. You'll receive concepts within 72 hours, then we refine together.", icon: "🎨" },
-  { step: "03", title: "Review & Approve", desc: "Use your personal dashboard to review deliverables, request changes, and approve finals — all in one place.", icon: "✅" },
-  { step: "04", title: "Launch Your Brand", desc: "Download all files in every format you need. Your brand is ready to go live — and we're here if you need us.", icon: "🚀" },
+  { n: "01", title: "Tell us your vision", desc: "Select services, set your budget, and submit a creative brief — takes 5 minutes.", icon: "💡" },
+  { n: "02", title: "We design & iterate", desc: "First concepts in 72 hours. We refine together until every pixel is perfect.", icon: "🎨" },
+  { n: "03", title: "Review & approve", desc: "Use your private dashboard to review, comment, and approve deliverables.", icon: "✅" },
+  { n: "04", title: "Launch your brand", desc: "Download production-ready files in every format. Your brand is live.", icon: "🚀" },
 ];
 
 /* ── Testimonials ── */
 const TESTIMONIALS = [
-  {
-    quote: "We went from a DIY logo to a complete premium identity in just 10 days. Our clients now treat us differently — the brand commands respect.",
-    name: "Sarra Mansour",
-    role: "CEO, Artisan Tunisia",
-    avatar: "S",
-    result: "3x more client inquiries",
-  },
-  {
-    quote: "The dashboard alone sold me. Being able to see progress, approve files, and chat with the team in one place — no other agency offers this.",
-    name: "Karim El Haj",
-    role: "Co-Founder, NovaTech",
-    avatar: "K",
-    result: "Rebranded in 2 weeks",
-  },
-  {
-    quote: "Bilingual, professional, and incredibly fast. We needed Arabic + French + English brand assets and they delivered everything flawlessly.",
-    name: "Leila Brahmi",
-    role: "Marketing Director, Sahel Retail",
-    avatar: "L",
-    result: "98% brand consistency score",
-  },
+  { quote: "We went from a DIY logo to a premium identity in 10 days. Clients treat us differently now — the brand commands respect.", name: "Sarra M.", role: "CEO, Artisan Tunisia", result: "3× client inquiries" },
+  { quote: "The dashboard alone sold me. Seeing progress, approving files, chatting with the team — all in one place. No other agency offers this.", name: "Karim E.", role: "Co-Founder, NovaTech", result: "Rebranded in 2 weeks" },
+  { quote: "Bilingual, precise, and ridiculously fast. We needed FR + EN brand assets and they nailed everything on the first round.", name: "Leila B.", role: "Marketing Dir., Sahel Retail", result: "98% brand consistency" },
 ];
 
-/* ── Trust logos ── */
-const TRUST_LOGOS = ["Decathlon", "Toyota", "AXA", "KPMG", "L'Oréal", "Nestlé"];
-
-/* ── Stats ── */
-const STATS = [
-  { value: "500+", label: "Projects Delivered", icon: Award },
-  { value: "98%", label: "Client Satisfaction", icon: Heart },
-  { value: "120+", label: "Happy Clients", icon: Users },
-  { value: "7 days", label: "Average Delivery", icon: Clock },
+/* ── Why us ── */
+const REASONS = [
+  { emoji: "⚡", title: "7-Day Delivery", desc: "While other agencies take weeks, we deliver your complete brand in 7 business days." },
+  { emoji: "🔄", title: "Unlimited Revisions", desc: "We iterate until you're genuinely thrilled — not just satisfied. Always free." },
+  { emoji: "🔒", title: "100% Ownership", desc: "Every file, vector, and asset is yours forever. Full commercial rights." },
+  { emoji: "📊", title: "Live Dashboard", desc: "Track progress, approve concepts, upload files — all from your personal portal." },
+  { emoji: "🌍", title: "FR + EN Bilingual", desc: "Based in Tunisia, serving globally. Zero language friction." },
+  { emoji: "🛡️", title: "Money-Back Guarantee", desc: "Not happy? Full refund. We've never had to use it — but it's there." },
 ];
 
-const fadeUp = { hidden: { opacity: 0, y: 24 }, show: { opacity: 1, y: 0 } };
-const stagger = { show: { transition: { staggerChildren: 0.08 } } };
+const fadeUp = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] } } };
+const stagger = { show: { transition: { staggerChildren: 0.06 } } };
 
 export default function Index() {
   const { t } = useI18n();
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground bg-grid-lines overflow-x-hidden">
+    <div className="min-h-screen bg-[#06080f] text-white noise-overlay overflow-x-hidden">
       <Navbar />
 
-      {/* ══════════════════════════════════════════
-          HERO SECTION
-      ══════════════════════════════════════════ */}
-      <section className="relative flex flex-col items-center justify-center text-center pt-40 pb-28 px-6">
-        <div className="blob-blue absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] opacity-60 pointer-events-none" />
-        <div className="blob-purple absolute top-20 left-1/2 -translate-x-1/2 translate-x-24 w-[500px] h-[400px] opacity-50 pointer-events-none" />
+      {/* ═══════════════════════════════════════════
+          HERO
+      ═══════════════════════════════════════════ */}
+      <section ref={heroRef} className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-28 pb-20">
+        {/* Ambient glow orbs */}
+        <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[900px] h-[600px] pointer-events-none">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(59,130,246,0.12)_0%,transparent_60%)]" />
+          <div className="absolute top-20 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle,rgba(139,92,246,0.1)_0%,transparent_60%)]" />
+        </div>
+        {/* Grid */}
+        <div className="absolute inset-0 bg-grid-lines opacity-40" />
 
-        <motion.div variants={fadeUp} initial="hidden" animate="show" transition={{ duration: 0.6 }} className="relative z-10 max-w-5xl mx-auto">
-          <div className="badge-pill mx-auto mb-8">
-            <Sparkles size={12} className="text-blue-400" />
-            Premium Branding Agency · Tunisia 🇹🇳
-          </div>
+        <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 max-w-5xl mx-auto">
+          {/* Badge */}
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
+            className="badge-pill mx-auto mb-10">
+            <Sparkles size={11} /> Tunisia's #1 Branding Studio
+          </motion.div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-[76px] font-semibold leading-[1.07] tracking-tight mb-7">
-            <span className="headline-gradient">We Build Brands</span>
+          {/* Headline */}
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.8 }}
+            className="text-[clamp(2.5rem,7vw,5.5rem)] font-semibold leading-[1.05] tracking-[-0.03em] mb-8"
+            style={{ fontFamily: "'Outfit', 'Inter', sans-serif" }}>
+            <span className="headline-gradient">We build brands</span>
             <br />
-            <span className="text-foreground">That Print Money</span>
-          </h1>
+            <span className="text-white/90">that print money.</span>
+          </motion.h1>
 
-          <p className="text-muted-foreground text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed mb-4">
-            From strategy to execution — we craft premium brand identities that make businesses unforgettable. Fast. Precise. Revenue-generating.
-          </p>
+          {/* Sub */}
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+            className="text-white/40 text-lg sm:text-xl max-w-[600px] mx-auto leading-relaxed mb-6 font-light">
+            Premium brand identities — strategy, design, and delivery — in 7 days flat. Trusted by 120+ businesses across EMEA.
+          </motion.p>
 
-          {/* Social proof micro-stat */}
-          <p className="text-sm text-primary font-medium mb-10">
-            ⭐ Trusted by 120+ businesses across Tunisia & EMEA — 98% satisfaction rate
-          </p>
+          {/* Social proof */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}
+            className="flex items-center justify-center gap-1 mb-12">
+            {[...Array(5)].map((_, i) => <Star key={i} size={13} className="text-amber-400 fill-amber-400" />)}
+            <span className="text-white/35 text-sm ml-2">4.9/5 from 120+ clients</span>
+          </motion.div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
+          {/* CTAs */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-24">
             <Link to="/builder">
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                className="btn-blue flex items-center gap-2.5 px-7 py-3.5 rounded-xl text-[15px]">
-                Start Your Project — It's Free <ArrowRight size={16} />
-              </motion.button>
+              <button className="btn-blue flex items-center gap-2.5 px-8 py-4 rounded-2xl text-[15px] font-semibold">
+                <span>Start Your Project</span> <ArrowRight size={16} />
+              </button>
             </Link>
             <Link to="/auth">
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                className="btn-outline-white flex items-center gap-2 px-7 py-3.5 rounded-xl text-[15px]">
-                View Client Portal
-              </motion.button>
+              <button className="btn-outline-white flex items-center gap-2 px-8 py-4 rounded-2xl text-[15px]">
+                Client Portal
+              </button>
             </Link>
-          </div>
+          </motion.div>
 
-          {/* Hero showcase image */}
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.8 }} className="relative max-w-4xl mx-auto">
-            <div className="glass-card p-1.5 shadow-brand">
-              <img src="/images/hero-showcase.png" alt="BrandingTN creative workspace showing brand design process" className="w-full rounded-[14px] border border-border" />
+          {/* Hero image */}
+          <motion.div initial={{ opacity: 0, y: 50, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.8, duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="relative max-w-[1000px] mx-auto">
+            <div className="relative rounded-2xl overflow-hidden border border-white/[0.06] shadow-epic image-shine">
+              <img src="/images/hero-showcase.png" alt="BrandingTN creative workspace" className="w-full" />
+              {/* Bottom gradient fade */}
+              <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#06080f] to-transparent" />
             </div>
-            <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-blue-900/20 blur-3xl rounded-full" />
+            {/* Glow underneath */}
+            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-[80%] h-32 bg-blue-500/8 blur-[80px] rounded-full" />
           </motion.div>
         </motion.div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          TRUST STRIP
-      ══════════════════════════════════════════ */}
-      <section className="py-16 border-t border-border">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-8">
-          <p className="text-muted-foreground text-sm font-medium tracking-widest uppercase">
-            Trusted by forward-thinking businesses
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-10">
-            {TRUST_LOGOS.map((name) => (
-              <span key={name} className="logo-mono text-foreground/70 text-base font-semibold tracking-tight">{name}</span>
+      {/* ═══════════════════════════════════════════
+          LOGO MARQUEE
+      ═══════════════════════════════════════════ */}
+      <section className="py-12 border-y border-white/[0.03] overflow-hidden">
+        <p className="text-center text-white/20 text-[11px] font-medium uppercase tracking-[0.2em] mb-8">
+          Trusted by forward-thinking companies
+        </p>
+        <div className="relative">
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#06080f] to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#06080f] to-transparent z-10" />
+          <div className="marquee-track">
+            {[...Array(2)].map((_, setIdx) => (
+              <div key={setIdx} className="flex items-center gap-16 px-8">
+                {["Decathlon", "Toyota", "AXA", "KPMG", "L'Oréal", "Nestlé", "Tunisair", "Ooredoo"].map((name) => (
+                  <span key={`${setIdx}-${name}`} className="text-white/15 text-lg font-semibold tracking-tight whitespace-nowrap select-none">
+                    {name}
+                  </span>
+                ))}
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
+      {/* ═══════════════════════════════════════════
           STATS
-      ══════════════════════════════════════════ */}
-      <section className="py-16 border-t border-border">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {STATS.map((s, i) => (
-              <motion.div key={s.value} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="text-center">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-3">
-                  <s.icon size={18} className="text-primary" />
-                </div>
-                <p className="text-4xl lg:text-5xl font-semibold text-foreground mb-2">{s.value}</p>
-                <p className="text-muted-foreground text-sm">{s.label}</p>
+      ═══════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="max-w-[1000px] mx-auto px-6">
+          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }}
+            className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {[
+              { value: "500+", label: "Projects shipped", color: "from-blue-500/20 to-blue-600/5" },
+              { value: "98%", label: "Client satisfaction", color: "from-emerald-500/20 to-emerald-600/5" },
+              { value: "120+", label: "Happy clients", color: "from-violet-500/20 to-violet-600/5" },
+              { value: "7 days", label: "Avg. delivery", color: "from-amber-500/20 to-amber-600/5" },
+            ].map((s) => (
+              <motion.div key={s.value} variants={fadeUp}
+                className="relative rounded-2xl border border-white/[0.04] p-6 text-center overflow-hidden group hover:border-white/[0.08] transition-all">
+                <div className={`absolute inset-0 bg-gradient-to-b ${s.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+                <p className="text-3xl md:text-4xl font-bold text-white/90 mb-1.5 relative z-10">{s.value}</p>
+                <p className="text-white/30 text-xs font-medium uppercase tracking-wider relative z-10">{s.label}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          SERVICES — WITH REAL MOCKUPS
-      ══════════════════════════════════════════ */}
-      <section className="py-24 border-t border-border">
-        <div className="max-w-6xl mx-auto px-6">
-          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
-            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Our Services</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">One agency.<br />All your brand needs.</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Every service includes unlimited revisions, all file formats, and a dedicated project dashboard.</p>
+      {/* ═══════════════════════════════════════════
+          SERVICES
+      ═══════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="max-w-[1100px] mx-auto px-6">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
+            <p className="text-blue-400/80 text-xs font-semibold uppercase tracking-[0.2em] mb-4">What We Create</p>
+            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight mb-5" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              One agency. Every brand need.
+            </h2>
+            <p className="text-white/35 text-base max-w-lg mx-auto font-light">
+              Each service includes unlimited revisions, all file formats, and your own project dashboard.
+            </p>
           </motion.div>
 
-          <div className="space-y-8">
+          <div className="space-y-6">
             {SERVICES.map((svc, i) => (
-              <motion.div key={svc.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="glass-card overflow-hidden border border-border group hover:border-primary/30 transition-all duration-300">
+              <motion.div key={svc.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+                className="group rounded-3xl border border-white/[0.04] overflow-hidden hover:border-white/[0.08] transition-all duration-500 bg-white/[0.01]">
                 <div className={`grid ${i === 0 ? "lg:grid-cols-5" : "lg:grid-cols-2"} gap-0`}>
                   {/* Image */}
                   <div className={`${i === 0 ? "lg:col-span-3" : ""} relative overflow-hidden`}>
-                    <img src={svc.image} alt={`${svc.title} mockup by BrandingTN`} className="w-full h-64 lg:h-80 object-cover group-hover:scale-[1.02] transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-                    {/* Stat overlay */}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-white/90 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-                        <TrendingUp size={11} /> {svc.stat}
+                    <img src={svc.image} alt={svc.title} className="w-full h-72 lg:h-[340px] object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#06080f] via-[#06080f]/30 to-transparent" />
+                    <div className="absolute bottom-5 left-5">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-white/70 bg-white/[0.08] backdrop-blur-md px-3 py-1.5 rounded-full border border-white/[0.06]">
+                        <TrendingUp size={10} /> {svc.stat}
                       </span>
                     </div>
                   </div>
                   {/* Content */}
-                  <div className={`${i === 0 ? "lg:col-span-2" : ""} p-7 lg:p-8 flex flex-col justify-between`}>
+                  <div className={`${i === 0 ? "lg:col-span-2" : ""} p-8 lg:p-10 flex flex-col justify-between`}>
                     <div>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                          <svc.icon size={18} className="text-primary" />
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15 border border-blue-500/10 flex items-center justify-center">
+                          <svc.icon size={17} className="text-blue-400" />
                         </div>
-                        <h3 className="text-xl font-semibold text-foreground">{svc.title}</h3>
+                        <h3 className="text-xl font-semibold text-white/90">{svc.title}</h3>
                       </div>
-                      <p className="text-muted-foreground text-sm leading-relaxed mb-5">{svc.desc}</p>
-                      <div className="flex flex-wrap gap-2 mb-6">
+                      <p className="text-white/35 text-sm leading-relaxed mb-6 font-light">{svc.desc}</p>
+                      <div className="flex flex-wrap gap-2 mb-8">
                         {svc.tags.map((tag) => (
-                          <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-muted border border-border text-muted-foreground flex items-center gap-1">
-                            <CheckCircle size={10} className="text-green-500" /> {tag}
+                          <span key={tag} className="text-[11px] px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.06] text-white/45 flex items-center gap-1">
+                            <CheckCircle size={9} className="text-emerald-400/70" /> {tag}
                           </span>
                         ))}
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-primary text-lg font-bold">{svc.price}</span>
+                      <div>
+                        <span className="text-white/20 text-xs uppercase tracking-wider">Starting at</span>
+                        <p className="text-2xl font-bold text-white/90">{svc.price}</p>
+                      </div>
                       <Link to="/builder">
-                        <button className="btn-blue px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 font-semibold">
-                          Get Started <ArrowRight size={14} />
+                        <button className="btn-blue px-6 py-3 rounded-xl text-sm flex items-center gap-2 font-semibold">
+                          <span>Get Started</span> <ArrowRight size={14} />
                         </button>
                       </Link>
                     </div>
@@ -252,138 +256,148 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          HOW IT WORKS — PROCESS
-      ══════════════════════════════════════════ */}
-      <section className="py-24 border-t border-border">
-        <div className="max-w-5xl mx-auto px-6">
-          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
-            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">How It Works</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">From brief to brand<br />in 4 simple steps</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">No phone calls needed. No back-and-forth emails. Everything happens in your personal dashboard.</p>
+      {/* ═══════════════════════════════════════════
+          PROCESS
+      ═══════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="max-w-[1000px] mx-auto px-6">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
+            <p className="text-blue-400/80 text-xs font-semibold uppercase tracking-[0.2em] mb-4">How It Works</p>
+            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight mb-5" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Brief to brand in 4 steps.
+            </h2>
+            <p className="text-white/35 text-base max-w-lg mx-auto font-light">
+              No calls needed. No email chains. Everything happens in your dashboard.
+            </p>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {PROCESS.map((p, i) => (
-              <motion.div key={p.step} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="glass-card p-6 border border-border relative group hover:border-primary/30 transition-all">
-                <span className="text-[64px] font-black text-muted/30 absolute top-2 right-4 leading-none select-none group-hover:text-primary/10 transition-colors">{p.step}</span>
-                <span className="text-3xl mb-4 block">{p.icon}</span>
-                <h3 className="text-base font-semibold text-foreground mb-2 relative z-10">{p.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed relative z-10">{p.desc}</p>
+              <motion.div key={p.n} variants={fadeUp}
+                className="relative rounded-2xl border border-white/[0.04] p-7 group hover:border-white/[0.08] transition-all duration-400 bg-white/[0.01] hover:bg-white/[0.02]">
+                <span className="text-[72px] font-black text-white/[0.03] absolute top-0 right-3 leading-none select-none group-hover:text-blue-500/[0.06] transition-colors duration-500">
+                  {p.n}
+                </span>
+                <span className="text-3xl mb-5 block">{p.icon}</span>
+                <h3 className="text-[15px] font-semibold text-white/85 mb-2">{p.title}</h3>
+                <p className="text-white/30 text-sm leading-relaxed font-light">{p.desc}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          WHY US — PERSUASION SECTION
-      ══════════════════════════════════════════ */}
-      <section className="py-24 border-t border-border">
-        <div className="max-w-5xl mx-auto px-6">
-          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Why Choose Us</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground mb-4">Built different.<br />By design.</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Every detail is engineered to give you a competitive advantage. Here's what makes us different.</p>
+      {/* ═══════════════════════════════════════════
+          WHY US
+      ═══════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="max-w-[1000px] mx-auto px-6">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+            <p className="text-blue-400/80 text-xs font-semibold uppercase tracking-[0.2em] mb-4">Why BrandingTN</p>
+            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Built different. By design.
+            </h2>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {REASONS.map((r, i) => (
-              <motion.div key={r.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.07 }}
-                className="glass-card p-6 border border-border hover:border-primary/25 transition-all group">
-                <span className="text-2xl mb-4 block">{r.emoji}</span>
-                <h3 className="text-base font-semibold text-foreground mb-2">{r.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{r.desc}</p>
+          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {REASONS.map((r) => (
+              <motion.div key={r.title} variants={fadeUp}
+                className="rounded-2xl border border-white/[0.04] p-6 hover:border-white/[0.08] transition-all bg-white/[0.01] hover:bg-white/[0.02] group">
+                <span className="text-2xl mb-4 block group-hover:scale-110 transition-transform origin-left">{r.emoji}</span>
+                <h3 className="text-[15px] font-semibold text-white/85 mb-2">{r.title}</h3>
+                <p className="text-white/30 text-sm leading-relaxed font-light">{r.desc}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          {/* Risk-reversal callout */}
+          {/* Guarantee */}
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
-            className="mt-10 glass-card p-6 border border-green-500/20 bg-green-500/[0.03] flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0">
-              <Shield size={22} className="text-green-500" />
+            className="mt-8 rounded-2xl border border-emerald-500/10 bg-emerald-500/[0.02] p-6 flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center shrink-0">
+              <Shield size={24} className="text-emerald-400" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-1">100% Satisfaction Guarantee</h4>
-              <p className="text-muted-foreground text-sm">If you're not completely happy with the final result, we'll revise it for free until you are — or give you a full refund. Zero risk.</p>
+              <h4 className="font-semibold text-white/85 mb-1">100% Satisfaction Guarantee</h4>
+              <p className="text-white/35 text-sm font-light">Not thrilled with the result? We revise for free until you are — or full refund. Zero risk for you.</p>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
+      {/* ═══════════════════════════════════════════
           TESTIMONIALS
-      ══════════════════════════════════════════ */}
-      <section className="py-24 border-t border-border">
-        <div className="max-w-5xl mx-auto px-6">
-          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-14">
-            <p className="text-primary text-sm font-semibold uppercase tracking-widest mb-3">Client Results</p>
-            <h2 className="text-4xl lg:text-5xl font-semibold text-foreground">Real brands. Real impact.</h2>
+      ═══════════════════════════════════════════ */}
+      <section className="py-24">
+        <div className="max-w-[1000px] mx-auto px-6">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+            <p className="text-blue-400/80 text-xs font-semibold uppercase tracking-[0.2em] mb-4">Client Results</p>
+            <h2 className="text-4xl md:text-5xl font-semibold tracking-tight" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Real brands. Real impact.
+            </h2>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div key={t.name} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className="glass-card p-6 flex flex-col gap-5 border border-border hover:border-primary/20 transition-all">
+          <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {TESTIMONIALS.map((t) => (
+              <motion.div key={t.name} variants={fadeUp}
+                className="rounded-2xl border border-white/[0.04] p-7 flex flex-col gap-5 bg-white/[0.01] hover:border-white/[0.08] hover:bg-white/[0.02] transition-all">
                 <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, si) => (
-                    <Star key={si} size={14} className="text-primary fill-primary" />
-                  ))}
+                  {[...Array(5)].map((_, i) => <Star key={i} size={12} className="text-amber-400 fill-amber-400" />)}
                 </div>
-                <p className="text-muted-foreground text-sm leading-relaxed flex-1">"{t.quote}"</p>
-                {/* Result badge */}
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full w-fit">
-                  <TrendingUp size={11} /> {t.result}
+                <p className="text-white/45 text-sm leading-relaxed flex-1 font-light">"{t.quote}"</p>
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-400/80 bg-emerald-500/[0.06] border border-emerald-500/10 px-2.5 py-1 rounded-full w-fit">
+                  <TrendingUp size={10} /> {t.result}
                 </span>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                    {t.avatar}
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 border border-blue-500/15 flex items-center justify-center text-blue-400 font-bold text-xs">
+                    {t.name[0]}
                   </div>
                   <div>
-                    <p className="text-foreground text-sm font-semibold">{t.name}</p>
-                    <p className="text-muted-foreground text-xs">{t.role}</p>
+                    <p className="text-white/80 text-sm font-medium">{t.name}</p>
+                    <p className="text-white/25 text-xs">{t.role}</p>
                   </div>
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
+      {/* ═══════════════════════════════════════════
           FINAL CTA
-      ══════════════════════════════════════════ */}
-      <section className="py-28 border-t border-border">
-        <div className="max-w-4xl mx-auto px-6 text-center relative">
-          <div className="blob-blue absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] opacity-40 pointer-events-none" />
-          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="relative z-10">
-            <div className="badge-pill mx-auto mb-8 border-border">
-              <Zap size={12} className="text-primary" /> Start in under 5 minutes
+      ═══════════════════════════════════════════ */}
+      <section className="py-32 relative">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-[600px] h-[400px] bg-[radial-gradient(ellipse,rgba(59,130,246,0.08)_0%,transparent_70%)]" />
+        </div>
+        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+          <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}>
+            <div className="badge-pill mx-auto mb-10">
+              <Zap size={11} /> Start in under 5 minutes
             </div>
-            <h2 className="text-4xl lg:text-[60px] font-semibold leading-tight text-foreground mb-6">
-              Your competitors already<br />
+            <h2 className="text-4xl md:text-[56px] font-semibold leading-[1.1] tracking-tight mb-7" style={{ fontFamily: "'Outfit', sans-serif" }}>
+              Your competitors already
+              <br />
               <span className="headline-gradient">have a brand. Do you?</span>
             </h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-4">
-              Use our interactive project builder. See real-time pricing, choose your services, and launch your brand with just a 30% deposit.
+            <p className="text-white/35 text-base max-w-md mx-auto mb-5 font-light">
+              Real-time pricing. Interactive project builder. First concepts in 72 hours. Only 30% deposit to start.
             </p>
-            <p className="text-sm text-muted-foreground mb-10">
-              💳 Secure payment via Stripe · 🔒 Full refund guarantee · ⚡ First concepts in 72 hours
+            <p className="text-white/20 text-xs mb-12">
+              💳 Secure Stripe payments · 🔒 Full refund guarantee · ⚡ 7-day delivery
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link to="/builder">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                  className="btn-blue flex items-center gap-2 px-8 py-4 rounded-xl text-base">
-                  Launch Project Builder <ArrowRight size={17} />
-                </motion.button>
+                <button className="btn-blue flex items-center gap-2.5 px-8 py-4 rounded-2xl text-base font-semibold">
+                  <span>Launch Project Builder</span> <ArrowRight size={17} />
+                </button>
               </Link>
               <Link to="/auth">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                  className="btn-outline-white flex items-center gap-2 px-8 py-4 rounded-xl text-base">
-                  <CheckCircle size={17} /> Sign In to Your Portal
-                </motion.button>
+                <button className="btn-outline-white flex items-center gap-2 px-8 py-4 rounded-2xl text-base">
+                  <CheckCircle size={17} /> Sign In
+                </button>
               </Link>
             </div>
           </motion.div>
