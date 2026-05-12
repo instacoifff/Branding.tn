@@ -15,19 +15,39 @@ const CreativeBrief = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
-  const [form, setForm] = useState({ company: "", industry: "", description: "", audience: "", style: "", references: "" });
+  const [form, setForm] = useState(() => {
+    // Restore saved brief from localStorage (survives auth redirect)
+    const saved = localStorage.getItem("draft_brief");
+    if (saved) {
+      try { return JSON.parse(saved); } catch { /* ignore */ }
+    }
+    return { company: "", industry: "", description: "", audience: "", style: "", references: "" };
+  });
   const [loading, setLoading] = useState(false);
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
-    const rawServices = sessionStorage.getItem("builder_services");
-    const rawTotal = sessionStorage.getItem("builder_total");
+    // Try sessionStorage first (fresh from builder), fallback to localStorage (after auth redirect)
+    const rawServices = sessionStorage.getItem("builder_services") || localStorage.getItem("builder_services");
+    const rawTotal = sessionStorage.getItem("builder_total") || localStorage.getItem("builder_total");
     if (rawServices) setSelectedServices(JSON.parse(rawServices));
     if (rawTotal) setTotal(Number(rawTotal));
+    // Persist to localStorage so it survives auth redirect
+    if (sessionStorage.getItem("builder_services")) {
+      localStorage.setItem("builder_services", sessionStorage.getItem("builder_services")!);
+      localStorage.setItem("builder_total", sessionStorage.getItem("builder_total") || "0");
+    }
   }, []);
 
-  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+  // Auto-save form as user types (debounced via React state)
+  const update = (field: string, value: string) => {
+    setForm((prev: typeof form) => {
+      const next = { ...prev, [field]: value };
+      localStorage.setItem("draft_brief", JSON.stringify(next));
+      return next;
+    });
+  };
   const deposit = Math.round(total * 0.3);
 
   const { startCheckout, loading: checkoutLoading } = useStripeCheckout();
@@ -36,7 +56,9 @@ const CreativeBrief = () => {
     e.preventDefault();
 
     if (!user) {
-      toast.error(t("brief.errorNotLoggedIn"));
+      // Save return intent so auth page redirects back here
+      localStorage.setItem("auth_redirect", "/brief");
+      toast.info("Please sign in to submit your brief. Your progress is saved!");
       navigate("/auth");
       return;
     }
@@ -67,8 +89,13 @@ const CreativeBrief = () => {
 
       if (error) throw error;
 
+      // Clear all draft data from both storages
       sessionStorage.removeItem("builder_services");
       sessionStorage.removeItem("builder_total");
+      localStorage.removeItem("builder_services");
+      localStorage.removeItem("builder_total");
+      localStorage.removeItem("draft_brief");
+      localStorage.removeItem("auth_redirect");
 
       toast.success(t("brief.toastSuccess"));
 

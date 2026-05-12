@@ -60,6 +60,13 @@ const Auth = () => {
 
   useEffect(() => { 
     if (user && profile) {
+      // Check if the user was in the middle of submitting a brief
+      const pendingRedirect = localStorage.getItem("auth_redirect");
+      if (pendingRedirect) {
+        localStorage.removeItem("auth_redirect");
+        navigate(pendingRedirect);
+        return;
+      }
       if (profile.role === "admin") navigate("/dashboard/admin");
       else if (profile.role === "creative") navigate("/dashboard/creative");
       else navigate("/dashboard");
