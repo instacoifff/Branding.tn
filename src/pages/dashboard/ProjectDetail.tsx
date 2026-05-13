@@ -90,6 +90,11 @@ const ProjectDetail = () => {
     const [sendingMsg, setSendingMsg] = useState(false);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
     const { startCheckout, loading: checkoutLoading } = useStripeCheckout();
 
     // Deliverable review
@@ -378,6 +383,7 @@ const ProjectDetail = () => {
                                     );
                                 })
                             )}
+                            <div ref={messagesEndRef} />
                         </div>
 
                         <div className="p-4 bg-card border-t border-border shrink-0">

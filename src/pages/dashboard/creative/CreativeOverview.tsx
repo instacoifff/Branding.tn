@@ -56,6 +56,11 @@ const CreativeOverview = () => {
     // Messaging states map since there are multiple projects on this page
     const [newMessages, setNewMessages] = useState<Record<string, string>>({});
     const [sendingMsg, setSendingMsg] = useState(false);
+    const chatEndRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+    useEffect(() => {
+        Object.values(chatEndRefs.current).forEach(ref => ref?.scrollIntoView({ behavior: "smooth" }));
+    }, [grouped]);
 
     useEffect(() => {
         const fetchMyProjects = async () => {
@@ -375,6 +380,7 @@ const CreativeOverview = () => {
                                             );
                                         })
                                     )}
+                                    <div ref={(el) => (chatEndRefs.current[pg.id] = el)} />
                                 </div>
                                 <div className="p-4 bg-card border-t border-border shrink-0">
                                     <form onSubmit={(e) => handleSendMessage(e, pg.id)} className="flex items-end gap-2">
