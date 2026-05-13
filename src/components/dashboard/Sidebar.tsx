@@ -14,6 +14,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
 
     const clientItems = [
         { icon: LayoutDashboard, label: t("dashboard.overview"), href: "/dashboard", exact: true },
+        { icon: MessageSquare, label: "Inbox", href: "/dashboard/inbox" },
         { icon: FolderKanban, label: t("dashboard.projects"), href: "/dashboard/projects" },
         { icon: FileText, label: t("dashboard.files"), href: "/dashboard/files" },
         { icon: Settings, label: t("dashboard.settings"), href: "/dashboard/settings" },
@@ -29,6 +30,7 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
 
     const creativeItems = [
         { icon: Palette, label: "My Tasks", href: "/dashboard/creative", exact: true },
+        { icon: MessageSquare, label: "Inbox", href: "/dashboard/creative/inbox" },
         { icon: Settings, label: t("dashboard.settings"), href: "/dashboard/settings" },
     ];
 

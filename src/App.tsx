@@ -17,7 +17,7 @@ import AllProjects from "./pages/dashboard/admin/AllProjects";
 import UsersList from "./pages/dashboard/admin/UsersList";
 import FilesVault from "./pages/dashboard/admin/FilesVault";
 import AdminProjectDetail from "./pages/dashboard/admin/AdminProjectDetail";
-import Inbox from "./pages/dashboard/admin/Inbox";
+import UnifiedInbox from "./pages/dashboard/UnifiedInbox";
 import CreativeOverview from "./pages/dashboard/creative/CreativeOverview";
 import NotFound from "./pages/NotFound";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -78,15 +78,17 @@ const App = () => (
                 <Route index element={<ClientGuard><Overview /></ClientGuard>} />
                 <Route path="projects" element={<ClientGuard><Projects /></ClientGuard>} />
                 <Route path="projects/:id" element={<ClientGuard><ProjectDetail /></ClientGuard>} />
+                <Route path="inbox" element={<ClientGuard><UnifiedInbox /></ClientGuard>} />
                 <Route path="files" element={<ClientGuard><Files /></ClientGuard>} />
                 <Route path="settings" element={<Settings />} />
 
                 {/* Creative routes */}
                 <Route path="creative" element={<CreativeGuard><CreativeOverview /></CreativeGuard>} />
+                <Route path="creative/inbox" element={<CreativeGuard><UnifiedInbox /></CreativeGuard>} />
 
                 {/* Admin routes */}
                 <Route path="admin" element={<AdminGuard><AdminOverview /></AdminGuard>} />
-                <Route path="admin/inbox" element={<AdminGuard><Inbox /></AdminGuard>} />
+                <Route path="admin/inbox" element={<AdminGuard><UnifiedInbox /></AdminGuard>} />
                 <Route path="admin/projects" element={<AdminGuard><AllProjects /></AdminGuard>} />
                 <Route path="admin/projects/:id" element={<AdminGuard><AdminProjectDetail /></AdminGuard>} />
                 <Route path="admin/users" element={<AdminGuard><UsersList /></AdminGuard>} />

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/i18n";
 import { toast } from "sonner";
 import {
@@ -31,8 +32,9 @@ type ProjectMessage = {
     profiles?: { full_name: string; avatar_url: string };
 };
 
-const Inbox = () => {
+const UnifiedInbox = () => {
     const { t } = useI18n();
+    const { user, profile } = useAuth();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -82,7 +84,7 @@ const Inbox = () => {
         const fetchProjects = async () => {
             const { data, error } = await supabase
                 .from("projects")
-                .select("id, title, status, current_stage, total_price, profiles!client_id(full_name, company, avatar_url), creative_profile:profiles!creative_id(full_name, avatar_url)")
+                .select("id, title, status, current_stage, total_price, profiles!projects_client_id_fkey(full_name, company, avatar_url), creative_profile:profiles!projects_creative_id_fkey(full_name, avatar_url)")
                 .order("created_at", { ascending: false });
 
             if (data) setProjects(data as any[]);
@@ -174,6 +176,21 @@ const Inbox = () => {
 
     const activeProject = projects.find(p => p.id === activeProjectId);
 
+    const getCounterpart = (p: Project) => {
+        if (profile?.role === 'client') {
+            return {
+                name: p.creative_profile?.full_name || "BrandingTN Team",
+                avatar: p.creative_profile?.avatar_url || "",
+                label: "Agency"
+            };
+        }
+        return {
+            name: p.profiles?.full_name || "Client",
+            avatar: p.profiles?.avatar_url || "",
+            label: "Client"
+        };
+    };
+
     return (
         <div className="h-[calc(100vh-100px)] flex bg-card border border-border rounded-2xl shadow-sm overflow-hidden animate-in fade-in zoom-in-95 duration-300">
             {/* Left Pane: Conversation List */}
@@ -201,7 +218,9 @@ const Inbox = () => {
                             <p className="text-sm">No active threads</p>
                         </div>
                     ) : (
-                        filteredProjects.map(p => (
+                        filteredProjects.map(p => {
+                            const cp = getCounterpart(p);
+                            return (
                             <button
                                 key={p.id}
                                 onClick={() => setActiveProjectId(p.id)}
@@ -209,14 +228,14 @@ const Inbox = () => {
                             >
                                 <div className="flex gap-3">
                                     <Avatar className="w-10 h-10 border border-border shadow-sm">
-                                        <AvatarImage src={p.profiles?.avatar_url || ""} />
+                                        <AvatarImage src={cp.avatar} />
                                         <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                                            {p.profiles?.full_name?.charAt(0) || "C"}
+                                            {cp.name.charAt(0)}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex justify-between items-center mb-0.5">
-                                            <p className="font-semibold text-sm truncate">{p.profiles?.full_name || "Client"}</p>
+                                            <p className="font-semibold text-sm truncate">{cp.name}</p>
                                             <span className="text-[10px] text-muted-foreground">Active</span>
                                         </div>
                                         <p className="text-xs font-medium text-foreground truncate">{p.title}</p>
@@ -226,7 +245,7 @@ const Inbox = () => {
                                     </div>
                                 </div>
                             </button>
-                        ))
+                        )})
                     )}
                 </div>
             </div>
@@ -245,9 +264,9 @@ const Inbox = () => {
                         <div className="px-6 py-4 border-b border-border bg-card/50 flex items-center justify-between shrink-0">
                             <div>
                                 <h3 className="font-bold">{activeProject?.title}</h3>
-                                <p className="text-xs text-muted-foreground">Client: {activeProject?.profiles?.full_name}</p>
+                                <p className="text-xs text-muted-foreground">Chatting with {getCounterpart(activeProject!).name}</p>
                             </div>
-                            <Link to={`/dashboard/admin/projects/${activeProjectId}`}>
+                            <Link to={profile?.role === 'admin' ? `/dashboard/admin/projects/${activeProjectId}` : `/dashboard/projects`}>
                                 <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-muted text-xs font-semibold hover:bg-muted/80 transition-colors">
                                     Open Project <ChevronRight size={14} />
                                 </button>
@@ -265,20 +284,21 @@ const Inbox = () => {
                                     <p className="text-xs text-muted-foreground mt-1">Start the conversation below.</p>
                                 </div>
                             ) : (
-                                messages.map((m) => {
                                     const isInternalMsg = m.is_internal;
+                                    const isMe = m.sender_id === user?.id;
+                                    
+                                    if (isInternalMsg && profile?.role === 'client') return null; // Clients don't see internal notes
+
                                     return (
-                                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={m.id} className={`flex gap-3 max-w-[85%] ${isInternalMsg ? "mr-auto ml-10" : ""}`}>
-                                            {!isInternalMsg && (
-                                                <Avatar className="w-8 h-8 shrink-0 mt-1">
-                                                    <AvatarImage src={m.profiles?.avatar_url || ""} />
-                                                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{m.profiles?.full_name?.charAt(0) || "U"}</AvatarFallback>
-                                                </Avatar>
-                                            )}
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-2">
+                                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={m.id} className={`flex gap-3 max-w-[85%] ${isMe ? "ml-auto flex-row-reverse" : "mr-auto"}`}>
+                                            <Avatar className="w-8 h-8 shrink-0 mt-1">
+                                                <AvatarImage src={m.profiles?.avatar_url || ""} />
+                                                <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{m.profiles?.full_name?.charAt(0) || "U"}</AvatarFallback>
+                                            </Avatar>
+                                            <div className={`space-y-1 flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                                                <div className={`flex items-center gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
                                                     <span className="text-xs font-bold text-foreground">
-                                                        {isInternalMsg ? "INTERNAL NOTE" : (m.profiles?.full_name || "Unknown")}
+                                                        {isInternalMsg ? "INTERNAL NOTE" : (isMe ? "You" : (m.profiles?.full_name || "Unknown"))}
                                                     </span>
                                                     <span className="text-[10px] text-muted-foreground">
                                                         {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -286,7 +306,7 @@ const Inbox = () => {
                                                 </div>
                                                 <div className={`p-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm border ${isInternalMsg
                                                     ? "bg-orange-500/10 border-orange-500/20 text-orange-950 dark:text-orange-200"
-                                                    : "bg-card border-border text-foreground"
+                                                    : isMe ? "bg-primary text-primary-foreground border-primary rounded-tr-none" : "bg-card border-border text-foreground rounded-tl-none"
                                                     }`}>
                                                     {m.message}
                                                 </div>
@@ -345,15 +365,17 @@ const Inbox = () => {
                                 )}
                             </AnimatePresence>
 
-                            <div className="flex mb-2">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-3 flex items-center gap-1">Mode:</span>
-                                <button onClick={() => setIsInternal(false)} className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ${!isInternal ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
-                                    Client Reply
-                                </button>
-                                <button onClick={() => setIsInternal(true)} className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ml-1 flex items-center gap-1 ${isInternal ? "bg-orange-500/20 text-orange-600" : "text-muted-foreground hover:bg-muted"}`}>
-                                    <EyeOff size={12} /> Internal Note
-                                </button>
-                            </div>
+                            {profile?.role !== 'client' && (
+                                <div className="flex mb-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mr-3 flex items-center gap-1">Mode:</span>
+                                    <button onClick={() => setIsInternal(false)} className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ${!isInternal ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
+                                        Reply
+                                    </button>
+                                    <button onClick={() => setIsInternal(true)} className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ml-1 flex items-center gap-1 ${isInternal ? "bg-orange-500/20 text-orange-600" : "text-muted-foreground hover:bg-muted"}`}>
+                                        <EyeOff size={12} /> Internal Note
+                                    </button>
+                                </div>
+                            )}
                             <form onSubmit={handleSendMessage} className={`relative flex items-center rounded-xl border focus-within:ring-2 focus-within:ring-primary/20 transition-all ${isInternal ? "border-orange-500/50 bg-orange-500/5" : "border-border bg-background"}`}>
                                 <input
                                     ref={inputRef}
@@ -451,4 +473,4 @@ const Inbox = () => {
     );
 };
 
-export default Inbox;
+export default UnifiedInbox;
