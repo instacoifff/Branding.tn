@@ -4,12 +4,16 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Bell } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 type Notification = {
     id: string;
     title: string;
     body: string | null;
     read: boolean;
     created_at: string;
+    reference_type: string | null;
+    reference_id: string | null;
 };
 
 const NotificationBell = () => {
@@ -70,6 +74,31 @@ const NotificationBell = () => {
         if (!open && unread > 0) markAllRead();
     };
 
+    const navigate = useNavigate();
+
+    const getNotificationLink = (n: Notification) => {
+        if (!n.reference_id || !n.reference_type) return null;
+        
+        if (n.reference_type === 'project') {
+            if (user?.user_metadata?.role === 'admin') {
+                return `/dashboard/admin/project/${n.reference_id}`;
+            } else if (user?.user_metadata?.role === 'creative') {
+                return `/dashboard/creative`; // Creatives use the overview dashboard
+            } else {
+                return `/dashboard/project/${n.reference_id}`; // Client
+            }
+        }
+        return null;
+    };
+
+    const handleNotificationClick = (n: Notification) => {
+        setOpen(false);
+        const link = getNotificationLink(n);
+        if (link) {
+            navigate(link);
+        }
+    };
+
     return (
         <div className="relative shrink-0" ref={ref}>
             <button
@@ -108,15 +137,29 @@ const NotificationBell = () => {
                                     No notifications yet
                                 </div>
                             ) : (
-                                notifications.map((n) => (
-                                    <div key={n.id} className={`px-4 py-3 ${!n.read ? "bg-primary/5" : ""}`}>
-                                        <p className="text-sm font-medium leading-snug">{n.title}</p>
-                                        {n.body && <p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>}
-                                        <p className="text-[10px] text-muted-foreground mt-1">
-                                            {new Date(n.created_at).toLocaleString()}
-                                        </p>
-                                    </div>
-                                ))
+                                notifications.map((n) => {
+                                    const link = getNotificationLink(n);
+                                    
+                                    const content = (
+                                        <>
+                                            <p className="text-sm font-medium leading-snug">{n.title}</p>
+                                            {n.body && <p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>}
+                                            <p className="text-[10px] text-muted-foreground mt-1">
+                                                {new Date(n.created_at).toLocaleString()}
+                                            </p>
+                                        </>
+                                    );
+
+                                    return (
+                                        <div
+                                            key={n.id}
+                                            onClick={() => handleNotificationClick(n)}
+                                            className={`px-4 py-3 transition-colors ${link ? 'cursor-pointer hover:bg-muted/50' : ''} ${!n.read ? "bg-primary/5" : ""}`}
+                                        >
+                                            {content}
+                                        </div>
+                                    );
+                                })
                             )}
                         </div>
                     </motion.div>
