@@ -60,6 +60,15 @@ const AdminProjectDetail = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
     const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
     const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
     const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
@@ -122,7 +131,7 @@ const AdminProjectDetail = () => {
         return () => { supabase.removeChannel(msgChannel); };
     }, [id, navigate]);
 
-    // Realtime subscription for auto-progression updates
+    // Realtime subscription for auto-progression and task updates
     useEffect(() => {
         if (!id) return;
         const projChannel = supabase.channel(`admin_project_${id}`)
@@ -133,6 +142,15 @@ const AdminProjectDetail = () => {
                     setStatus(updated.status);
                     setProject(prev => prev ? { ...prev, current_stage: updated.current_stage, status: updated.status } : prev);
                     toast.info(`⚡ Auto-progression: Project moved to Stage ${updated.current_stage}`);
+                }
+            })
+            .on("postgres_changes", { event: "*", schema: "public", table: "tasks", filter: `project_id=eq.${id}` }, payload => {
+                if (payload.eventType === "UPDATE") {
+                    setTasks(prev => prev.map(t => t.id === payload.new.id ? { ...t, ...payload.new } as Task : t));
+                } else if (payload.eventType === "INSERT") {
+                    setTasks(prev => [...prev, payload.new as Task]);
+                } else if (payload.eventType === "DELETE") {
+                    setTasks(prev => prev.filter(t => t.id !== payload.old.id));
                 }
             })
             .subscribe();
@@ -231,13 +249,18 @@ const AdminProjectDetail = () => {
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (!newMessage.trim() || !currentUser || !id) return;
         setSendingMsg(true);
-        const { error } = await supabase.from("project_messages").insert({
+        const { data: insertedMsg, error } = await supabase.from("project_messages").insert({
             project_id: id,
             sender_id: currentUser.id,
             message: newMessage.trim(),
-        });
-        if (error) { toast.error("Failed to send message"); }
-        else { setNewMessage(""); }
+        }).select("*, profiles(full_name, avatar_url)").single();
+        if (!error && insertedMsg) {
+            setNewMessage("");
+            setMessages(prev => {
+                if (prev.some(m => m.id === insertedMsg.id)) return prev;
+                return [...prev, insertedMsg as any];
+            });
+        } else if (error) { toast.error("Failed to send message"); }
         setSendingMsg(false);
     };
 

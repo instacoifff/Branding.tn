@@ -174,13 +174,20 @@ const ProjectDetail = () => {
         e.preventDefault();
         if (!newMessage.trim() || !user || !id) return;
         setSendingMsg(true);
-        const { error } = await supabase.from("project_messages").insert({
+        const { data: insertedMsg, error } = await supabase.from("project_messages").insert({
             project_id: id,
             sender_id: user.id,
-            message: newMessage.trim(),
-        });
-        if (error) { toast.error("Failed to send message"); }
-        else { setNewMessage(""); }
+            message: newMessage.trim()
+        }).select("*, profiles(full_name, avatar_url)").single();
+        if (!error && insertedMsg) {
+            setNewMessage("");
+            setMessages(prev => {
+                if (prev.some(m => m.id === insertedMsg.id)) return prev;
+                return [...prev, insertedMsg as any];
+            });
+        } else if (error) {
+            toast.error("Failed to send message");
+        }
         setSendingMsg(false);
     };
 

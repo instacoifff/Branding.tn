@@ -161,14 +161,29 @@ const CreativeOverview = () => {
         const msg = newMessages[projectId] || "";
         if (!msg.trim() || !user) return;
         setSendingMsg(true);
-        const { error } = await supabase.from("project_messages").insert({
+        const { data: insertedMsg, error } = await supabase.from("project_messages").insert({
             project_id: projectId,
             sender_id: user.id,
             message: msg.trim(),
-        });
+        }).select("*, profiles(full_name, avatar_url)").single();
         if (error) { toast.error("Failed to send message"); }
-        else {
+        else if (insertedMsg) {
             setNewMessages(prev => ({ ...prev, [projectId]: "" }));
+            // Optimistic update
+            setGrouped(prev => {
+                const cloned = [...prev];
+                const gIdx = cloned.findIndex(g => g.id === projectId);
+                if (gIdx !== -1) {
+                    const exists = cloned[gIdx].messages.some(m => m.id === insertedMsg.id);
+                    if (!exists) {
+                        cloned[gIdx] = {
+                            ...cloned[gIdx],
+                            messages: [...cloned[gIdx].messages, insertedMsg as any]
+                        };
+                    }
+                }
+                return cloned;
+            });
         }
         setSendingMsg(false);
     };
