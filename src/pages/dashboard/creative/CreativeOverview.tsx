@@ -56,10 +56,14 @@ const CreativeOverview = () => {
     // Messaging states map since there are multiple projects on this page
     const [newMessages, setNewMessages] = useState<Record<string, string>>({});
     const [sendingMsg, setSendingMsg] = useState(false);
-    const chatEndRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+    const chatContainerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
     useEffect(() => {
-        Object.values(chatEndRefs.current).forEach(ref => ref?.scrollIntoView({ behavior: "smooth" }));
+        Object.values(chatContainerRefs.current).forEach(container => {
+            if (container) {
+                container.scrollTop = container.scrollHeight;
+            }
+        });
     }, [grouped]);
 
     useEffect(() => {
@@ -355,7 +359,10 @@ const CreativeOverview = () => {
                                         <MessageSquare size={14} className="text-primary" /> Team Discussion
                                     </h3>
                                 </div>
-                                <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-muted/5">
+                                <div 
+                                    className="flex-1 overflow-y-auto p-5 space-y-4 bg-muted/5"
+                                    ref={(el) => (chatContainerRefs.current[pg.id] = el)}
+                                >
                                     {pg.messages?.length === 0 ? (
                                         <p className="text-center text-sm text-muted-foreground my-8">No messages. Introduce yourself to the client.</p>
                                     ) : (
@@ -380,7 +387,6 @@ const CreativeOverview = () => {
                                             );
                                         })
                                     )}
-                                    <div ref={(el) => (chatEndRefs.current[pg.id] = el)} />
                                 </div>
                                 <div className="p-4 bg-card border-t border-border shrink-0">
                                     <form onSubmit={(e) => handleSendMessage(e, pg.id)} className="flex items-end gap-2">

@@ -90,10 +90,12 @@ const ProjectDetail = () => {
     const [sendingMsg, setSendingMsg] = useState(false);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
     }, [messages]);
     const { startCheckout, loading: checkoutLoading } = useStripeCheckout();
 
@@ -358,7 +360,7 @@ const ProjectDetail = () => {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/10">
+                        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/10">
                             {messages.length === 0 ? (
                                 <p className="text-center text-sm text-muted-foreground my-8">No messages yet. Say hello to your team!</p>
                             ) : (
@@ -383,7 +385,6 @@ const ProjectDetail = () => {
                                     );
                                 })
                             )}
-                            <div ref={messagesEndRef} />
                         </div>
 
                         <div className="p-4 bg-card border-t border-border shrink-0">

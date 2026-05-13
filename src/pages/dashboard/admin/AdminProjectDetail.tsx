@@ -60,10 +60,12 @@ const AdminProjectDetail = () => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+        }
     };
 
     useEffect(() => {
@@ -672,7 +674,7 @@ const AdminProjectDetail = () => {
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-muted/10">
+                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-5 space-y-4 bg-muted/10">
                     {messages.length === 0 ? (
                         <p className="text-center text-sm text-muted-foreground my-8">No messages yet. Send a note to the client or creative.</p>
                     ) : (
