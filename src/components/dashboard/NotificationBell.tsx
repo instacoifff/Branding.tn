@@ -69,9 +69,17 @@ const NotificationBell = () => {
         setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     };
 
+    const markAsRead = async (id: string) => {
+        if (!user) return;
+        await supabase
+            .from("notifications")
+            .update({ read: true })
+            .eq("id", id);
+        setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    };
+
     const handleOpen = () => {
         setOpen((v) => !v);
-        if (!open && unread > 0) markAllRead();
     };
 
     const navigate = useNavigate();
@@ -92,6 +100,9 @@ const NotificationBell = () => {
     };
 
     const handleNotificationClick = (n: Notification) => {
+        if (!n.read) {
+            markAsRead(n.id);
+        }
         setOpen(false);
         const link = getNotificationLink(n);
         if (link) {
@@ -125,9 +136,13 @@ const NotificationBell = () => {
                     >
                         <div className="px-4 py-3.5 border-b border-border flex items-center justify-between">
                             <h3 className="text-sm font-semibold">Notifications</h3>
-                            {unread === 0 && notifications.length > 0 && (
+                            {unread > 0 ? (
+                                <button onClick={markAllRead} className="text-xs text-primary hover:underline font-medium">
+                                    Mark all as read
+                                </button>
+                            ) : notifications.length > 0 ? (
                                 <span className="text-xs text-muted-foreground">All read</span>
-                            )}
+                            ) : null}
                         </div>
 
                         <div className="max-h-72 overflow-y-auto divide-y divide-border">
@@ -141,20 +156,27 @@ const NotificationBell = () => {
                                     const link = getNotificationLink(n);
                                     
                                     const content = (
-                                        <>
-                                            <p className="text-sm font-medium leading-snug">{n.title}</p>
-                                            {n.body && <p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>}
-                                            <p className="text-[10px] text-muted-foreground mt-1">
-                                                {new Date(n.created_at).toLocaleString()}
-                                            </p>
-                                        </>
+                                        <div className="flex gap-3 relative">
+                                            {!n.read && (
+                                                <div className="absolute -left-1 top-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                            )}
+                                            <div className="flex-1">
+                                                <p className={`text-sm leading-snug ${!n.read ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground'}`}>
+                                                    {n.title}
+                                                </p>
+                                                {n.body && <p className="text-xs text-muted-foreground mt-0.5">{n.body}</p>}
+                                                <p className="text-[10px] text-muted-foreground mt-1">
+                                                    {new Date(n.created_at).toLocaleString()}
+                                                </p>
+                                            </div>
+                                        </div>
                                     );
 
                                     return (
                                         <div
                                             key={n.id}
                                             onClick={() => handleNotificationClick(n)}
-                                            className={`px-4 py-3 transition-colors ${link ? 'cursor-pointer hover:bg-muted/50' : ''} ${!n.read ? "bg-primary/5" : ""}`}
+                                            className={`px-4 py-3 transition-colors ${link ? 'cursor-pointer hover:bg-muted/50' : 'cursor-pointer hover:bg-muted/30'} ${!n.read ? "bg-primary/5" : ""}`}
                                         >
                                             {content}
                                         </div>
