@@ -196,7 +196,7 @@ const UnifiedInbox = () => {
             {/* Left Pane: Conversation List */}
             <div className="w-80 shrink-0 border-r border-border flex flex-col bg-background/50">
                 <div className="p-4 border-b border-border">
-                    <h2 className="font-bold text-lg mb-3">Unified Inbox</h2>
+                    <h2 className="font-bold text-lg mb-3">{profile?.role === 'admin' ? "Global Inbox" : "Messages"}</h2>
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                         <input
@@ -414,7 +414,7 @@ const UnifiedInbox = () => {
             {activeProject && (
                 <div className="w-72 shrink-0 border-l border-border bg-muted/10 p-5 overflow-y-auto no-scrollbar">
                     <h3 className="font-bold text-sm tracking-wide mb-5 flex items-center gap-2">
-                        <Hash size={14} className="text-primary" /> Project CRM
+                        <Hash size={14} className="text-primary" /> {profile?.role === 'admin' ? "Project CRM" : "Project Details"}
                     </h3>
 
                     <div className="space-y-6">
