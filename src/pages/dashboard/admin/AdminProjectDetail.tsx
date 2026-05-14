@@ -68,9 +68,7 @@ const AdminProjectDetail = () => {
         }
     };
 
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+    // useEffect for scrollToBottom moved below messages state declaration
     const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
     const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
     const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
@@ -82,10 +80,13 @@ const AdminProjectDetail = () => {
 
     const [creatives, setCreatives] = useState<{ id: string; full_name: string }[]>([]);
 
-    // Messaging state
     const [messages, setMessages] = useState<ProjectMessage[]>([]);
     const [newMessage, setNewMessage] = useState("");
     const [sendingMsg, setSendingMsg] = useState(false);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     // New task form state
     const [showTaskForm, setShowTaskForm] = useState(false);
