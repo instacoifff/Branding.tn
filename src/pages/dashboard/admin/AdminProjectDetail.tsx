@@ -15,7 +15,6 @@ import {
   Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import DeliverableReviewOverlay from "@/components/dashboard/DeliverableReviewOverlay";
 
 type Project = {
   id: string;
@@ -109,7 +108,6 @@ export default function AdminProjectDetail() {
           </div>
           
           <div className="flex items-center gap-3">
-            {/* <DeliverableReviewOverlay projectId={project.id} /> */}
             <Link to="/dashboard/admin/inbox">
               <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-brand">
                 <MessageSquare size={16} />
