@@ -1,10 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
-import { Search, Loader2, FolderOpen, Plus, ChevronRight, Clock, PlayCircle, CheckCircle2, Filter, RefreshCw, X } from "lucide-react";
+import { Search, Loader2, FolderOpen, Plus, ChevronRight, Clock, PlayCircle, CheckCircle2, RefreshCw, X, MoreVertical, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useI18n } from "@/i18n";
 import { toast } from "sonner";
+import {
+    AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+    AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 type Project = {
     id: string;
@@ -59,6 +64,7 @@ const AllProjects = () => {
     const [selectedCreative, setSelectedCreative] = useState("");
     const [newPrice, setNewPrice] = useState("0");
     const [adding, setAdding] = useState(false);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     const fetchProjects = useCallback(async (showRefresh = false) => {
         if (showRefresh) setRefreshing(true); else setLoading(true);
@@ -72,7 +78,6 @@ const AllProjects = () => {
         const { data } = await query;
         setProjects((data as any) || []);
 
-        // Also fetch profile options for the Add Modal
         const [{ data: clientData }, { data: creativeData }] = await Promise.all([
             supabase.from("profiles").select("id, full_name").eq("role", "client"),
             supabase.from("profiles").select("id, full_name").eq("role", "creative")
@@ -112,6 +117,28 @@ const AllProjects = () => {
         setAdding(false);
     };
 
+    const handleDeleteProject = async (projectId: string) => {
+        setDeletingId(projectId);
+        const { error } = await supabase.from("projects").delete().eq("id", projectId);
+        if (error) {
+            toast.error("Failed to delete project");
+        } else {
+            toast.success("Project deleted successfully");
+            setProjects(prev => prev.filter(p => p.id !== projectId));
+        }
+        setDeletingId(null);
+    };
+
+    const updateProjectStatus = async (projectId: string, newStatus: Project["status"]) => {
+        const { error } = await supabase.from("projects").update({ status: newStatus }).eq("id", projectId);
+        if (error) {
+            toast.error("Failed to update status");
+        } else {
+            setProjects(prev => prev.map(p => p.id === projectId ? { ...p, status: newStatus } : p));
+            toast.success(`Project marked as ${newStatus}`);
+        }
+    };
+
     const filtered = projects.filter(p =>
         p.title.toLowerCase().includes(search.toLowerCase()) ||
         p.profiles?.full_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -145,22 +172,20 @@ const AllProjects = () => {
                         </button>
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all"
+                            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-90 transition-all shadow-brand"
                         >
                             <Plus size={15} /> New Project
                         </button>
                     </div>
                 </div>
 
-                {/* Filter + Search bar */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-6">
-                    {/* Filter tabs */}
-                    <div className="flex gap-1 bg-muted/50 p-1 rounded-xl border border-border">
+                    <div className="flex gap-1 bg-muted/50 p-1 rounded-xl border border-border overflow-x-auto max-w-full">
                         {FILTER_TABS.map(tab => (
                             <button
                                 key={tab.key}
                                 onClick={() => setFilter(tab.key)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${filter === tab.key ? "bg-card shadow-sm text-foreground border border-border" : "text-muted-foreground hover:text-foreground"
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${filter === tab.key ? "bg-card shadow-sm text-foreground border border-border" : "text-muted-foreground hover:text-foreground"
                                     }`}
                             >
                                 {tab.label}
@@ -170,8 +195,7 @@ const AllProjects = () => {
                             </button>
                         ))}
                     </div>
-                    {/* Search */}
-                    <div className="relative flex-1 min-w-0 max-w-xs ml-auto">
+                    <div className="relative flex-1 min-w-0 max-w-xs sm:ml-auto">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                         <input
                             type="text"
@@ -198,102 +222,128 @@ const AllProjects = () => {
                 </motion.div>
             ) : (
                 <motion.div variants={fadeUp} initial="hidden" animate="show"
-                    className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-                    {/* Table header */}
-                    <div className="grid grid-cols-[2fr_1.5fr_120px_100px_100px_52px] gap-4 px-6 py-3 bg-muted/40 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        <span>{t("dashboard.adminProjects.project")}</span>
-                        <span>{t("dashboard.adminProjects.client")}</span>
-                        <span>{t("dashboard.adminProjects.status")}</span>
-                        <span>Stage</span>
-                        <span>Price</span>
-                        <span />
-                    </div>
+                    className="bg-card rounded-2xl border border-border shadow-sm overflow-x-auto">
+                    <div className="min-w-[900px]">
+                        <div className="grid grid-cols-[2fr_1.5fr_120px_100px_100px_100px] gap-4 px-6 py-3 bg-muted/40 border-b border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            <span>{t("dashboard.adminProjects.project")}</span>
+                            <span>{t("dashboard.adminProjects.client")}</span>
+                            <span>{t("dashboard.adminProjects.status")}</span>
+                            <span>Stage</span>
+                            <span>Price</span>
+                            <span className="text-right">Actions</span>
+                        </div>
 
-                    <AnimatePresence>
-                        {filtered.map((project, i) => {
-                            const cfg = STATUS_CONFIG[project.status];
-                            const StatusIcon = cfg.icon;
-                            const progressPct = (project.current_stage / 5) * 100;
+                        <AnimatePresence>
+                            {filtered.map((project, i) => {
+                                const cfg = STATUS_CONFIG[project.status];
+                                const StatusIcon = cfg.icon;
+                                const progressPct = (project.current_stage / 5) * 100;
 
-                            return (
-                                <motion.div
-                                    key={project.id}
-                                    initial={{ opacity: 0, y: 6 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -4 }}
-                                    transition={{ delay: i * 0.03 }}
-                                    className="grid grid-cols-[2fr_1.5fr_120px_100px_100px_52px] gap-4 px-6 py-4 border-b border-border last:border-0 hover:bg-muted/20 transition-colors items-center"
-                                >
-                                    {/* Project */}
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-                                            <span className="text-primary text-sm font-bold">
-                                                {project.title.charAt(0).toUpperCase()}
-                                            </span>
-                                        </div>
+                                return (
+                                    <motion.div
+                                        key={project.id}
+                                        initial={{ opacity: 0, y: 6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -4 }}
+                                        transition={{ delay: i * 0.03 }}
+                                        className="grid grid-cols-[2fr_1.5fr_120px_100px_100px_100px] gap-4 px-6 py-4 border-b border-border last:border-0 hover:bg-muted/20 transition-colors items-center"
+                                    >
+                                        <Link to={`/dashboard/admin/projects/${project.id}`} className="flex items-center gap-3 min-w-0 group">
+                                            <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                                                <span className="text-sm font-bold">
+                                                    {project.title.charAt(0).toUpperCase()}
+                                                </span>
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{project.title}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {new Date(project.created_at).toLocaleDateString()}
+                                                </p>
+                                            </div>
+                                        </Link>
+
                                         <div className="min-w-0">
-                                            <p className="font-semibold text-sm truncate">{project.title}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {new Date(project.created_at).toLocaleDateString()}
+                                            <p className="text-sm font-medium truncate">
+                                                {project.profiles?.full_name || "—"}
+                                            </p>
+                                            {project.profiles?.company && (
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {project.profiles.company}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <div className="relative group/status">
+                                                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border cursor-pointer transition-all ${cfg.className}`}>
+                                                    <StatusIcon size={11} />
+                                                    {cfg.label}
+                                                </span>
+                                                <div className="absolute top-full left-0 mt-1 hidden group-hover/status:block z-20 bg-card border border-border rounded-lg shadow-xl overflow-hidden py-1">
+                                                    {(["onboarding", "active", "completed"] as const).map(s => (
+                                                        <button 
+                                                            key={s} 
+                                                            onClick={() => updateProjectStatus(project.id, s)}
+                                                            className="w-full text-left px-4 py-1.5 text-[10px] font-bold uppercase hover:bg-muted transition-colors whitespace-nowrap"
+                                                        >
+                                                            {s}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] font-bold uppercase text-muted-foreground">
+                                                {STAGE_LABELS[project.current_stage - 1] || `Stage ${project.current_stage}`}
+                                            </p>
+                                            <div className="w-16 bg-muted h-1 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-primary rounded-full transition-all duration-700"
+                                                    style={{ width: `${progressPct}%` }}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="text-sm font-bold">
+                                                {project.total_price.toLocaleString()} TND
                                             </p>
                                         </div>
-                                    </div>
 
-                                    {/* Client */}
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-medium truncate">
-                                            {project.profiles?.full_name || "—"}
-                                        </p>
-                                        {project.profiles?.company && (
-                                            <p className="text-xs text-muted-foreground truncate">
-                                                {project.profiles.company}
-                                            </p>
-                                        )}
-                                    </div>
-
-                                    {/* Status badge */}
-                                    <div>
-                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg.className}`}>
-                                            <StatusIcon size={11} />
-                                            {cfg.label}
-                                        </span>
-                                    </div>
-
-                                    {/* Stage + mini progress bar */}
-                                    <div className="space-y-1">
-                                        <p className="text-xs font-medium">
-                                            {STAGE_LABELS[project.current_stage - 1] || `Stage ${project.current_stage}`}
-                                        </p>
-                                        <div className="w-full bg-muted h-1 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-primary rounded-full transition-all duration-700"
-                                                style={{ width: `${progressPct}%` }}
-                                            />
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Link to={`/dashboard/admin/projects/${project.id}`}>
+                                                <button className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
+                                                    <ChevronRight size={14} />
+                                                </button>
+                                            </Link>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <button className="w-8 h-8 rounded-lg border border-destructive/20 text-destructive flex items-center justify-center hover:bg-destructive hover:text-white transition-all">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This will permanently remove <strong>{project.title}</strong> and all associated files and messages.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => handleDeleteProject(project.id)} className="bg-destructive hover:bg-destructive/90">
+                                                            {deletingId === project.id ? <Loader2 size={14} className="animate-spin" /> : "Delete Project"}
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
                                         </div>
-                                    </div>
-
-                                    {/* Price */}
-                                    <div>
-                                        <p className="text-sm font-semibold">
-                                            {project.total_price.toLocaleString()} TND
-                                        </p>
-                                        {project.deposit_paid ? (
-                                            <span className="text-[10px] text-green-600 font-medium">Deposit ✓</span>
-                                        ) : (
-                                            <span className="text-[10px] text-orange-500 font-medium">Pending</span>
-                                        )}
-                                    </div>
-
-                                    {/* Action */}
-                                    <Link to={`/dashboard/admin/projects/${project.id}`}>
-                                        <button className="w-9 h-9 rounded-lg border border-border flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
-                                            <ChevronRight size={15} />
-                                        </button>
-                                    </Link>
-                                </motion.div>
-                            );
-                        })}
-                    </AnimatePresence>
+                                    </motion.div>
+                                );
+                            })}
+                        </AnimatePresence>
+                    </div>
 
                     {/* Footer count */}
                     <div className="px-6 py-3 border-t border-border bg-muted/20">
@@ -312,51 +362,51 @@ const AllProjects = () => {
                         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
                     >
                         <motion.div
-                            initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-                            className="bg-card border border-border rounded-xl shadow-xl w-full max-w-md overflow-hidden relative"
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative"
                         >
-                            <div className="flex items-center justify-between p-5 border-b border-border bg-muted/20">
-                                <h3 className="font-semibold">Create New Project</h3>
-                                <button onClick={() => setShowAddModal(false)} className="text-muted-foreground hover:text-foreground">
+                            <div className="flex items-center justify-between p-6 border-b border-border bg-muted/20">
+                                <h3 className="font-bold">Create New Project</h3>
+                                <button onClick={() => setShowAddModal(false)} className="text-muted-foreground hover:text-foreground p-1 hover:bg-muted rounded-lg transition-colors">
                                     <X size={18} />
                                 </button>
                             </div>
-                            <form onSubmit={handleCreateProject} className="p-5 space-y-4">
+                            <form onSubmit={handleCreateProject} className="p-6 space-y-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium">Project Name *</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Project Name *</label>
                                     <input required value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-                                        placeholder="E.g. Logo Redesign" />
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                                        placeholder="E.g. Branding Refresh" />
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium">Assign Client *</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Assign Client *</label>
                                     <select required value={selectedClient} onChange={(e) => setSelectedClient(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none appearance-none">
                                         <option value="">Select a Client</option>
                                         {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
                                     </select>
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium">Assign Creative (Optional)</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Assign Creative</label>
                                     <select value={selectedCreative} onChange={(e) => setSelectedCreative(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none">
-                                        <option value="">No delegation yet</option>
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none appearance-none">
+                                        <option value="">Delegate later</option>
                                         {creatives.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
                                     </select>
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-medium">Initial Price Estimate (TND)</label>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Project Price (TND)</label>
                                     <input type="number" min="0" value={newPrice} onChange={(e) => setNewPrice(e.target.value)}
-                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
+                                        className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none" />
                                 </div>
 
-                                <div className="pt-2">
+                                <div className="pt-4">
                                     <button disabled={adding} type="submit"
-                                        className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg text-sm font-semibold flex justify-center items-center gap-2 hover:opacity-90 disabled:opacity-50 transition-opacity">
-                                        {adding ? <Loader2 size={16} className="animate-spin" /> : "Create Project"}
+                                        className="w-full bg-primary text-primary-foreground py-3 rounded-xl text-sm font-bold shadow-brand flex justify-center items-center gap-2 hover:opacity-90 disabled:opacity-50 transition-all">
+                                        {adding ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} /> Create Project</>}
                                     </button>
                                 </div>
                             </form>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { 
@@ -12,9 +12,16 @@ import {
   ChevronRight,
   TrendingUp,
   AlertCircle,
-  Loader2
+  Loader2,
+  MoreVertical,
+  Trash2,
+  Eye,
+  RotateCcw,
+  Plus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import DeliverableReviewOverlay from "@/components/dashboard/DeliverableReviewOverlay";
 
 type Project = {
   id: string;
@@ -23,6 +30,7 @@ type Project = {
   current_stage: number;
   total_price: number;
   client_id: string;
+  creative_id: string | null;
   created_at: string;
   profiles: {
     full_name: string | null;
@@ -31,32 +39,80 @@ type Project = {
   } | null;
 };
 
+type FileType = {
+  id: string;
+  file_name: string;
+  file_url: string;
+  type: string;
+  deliverable_status: "pending" | "approved" | "revision_requested" | null;
+  revision_note: string | null;
+  reviewed_at: string | null;
+  uploaded_at: string;
+};
+
+type Creative = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
 const STAGE_LABELS = ["Brief", "Concepts", "Refinement", "Finalisation", "Delivery"];
 
 export default function AdminProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
+  const [files, setFiles] = useState<FileType[]>([]);
+  const [creatives, setCreatives] = useState<Creative[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "deliverables" | "team">("overview");
+  
+  const [updating, setUpdating] = useState(false);
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  const [showCreativeMenu, setShowCreativeMenu] = useState(false);
+  
+  const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
+
+  const fetchData = useCallback(async () => {
+    if (!id) return;
+    
+    const [{ data: proj }, { data: fileData }, { data: creativeData }] = await Promise.all([
+      supabase.from("projects").select("*, profiles!client_id(full_name, email, avatar_url)").eq("id", id).single(),
+      supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name, avatar_url").eq("role", "creative")
+    ]);
+
+    if (proj) setProject(proj as Project);
+    if (fileData) setFiles(fileData as FileType[]);
+    if (creativeData) setCreatives(creativeData as Creative[]);
+    setLoading(false);
+  }, [id]);
 
   useEffect(() => {
-    const fetchProject = async () => {
-      if (!id) return;
-      
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*, profiles!client_id(full_name, email, avatar_url)")
-        .eq("id", id)
-        .single();
+    fetchData();
+  }, [fetchData]);
 
-      if (!error && data) {
-        setProject(data as Project);
-      }
-      setLoading(false);
-    };
+  const updateProject = async (updates: Partial<Project>) => {
+    if (!project) return;
+    setUpdating(true);
+    const { error } = await supabase.from("projects").update(updates).eq("id", project.id);
+    
+    if (error) {
+      toast.error("Failed to update project");
+    } else {
+      setProject({ ...project, ...updates });
+      toast.success("Project updated successfully");
+    }
+    setUpdating(false);
+    setShowStatusMenu(false);
+    setShowCreativeMenu(false);
+  };
 
-    fetchProject();
-  }, [id]);
+  const handleStageClick = (stageIndex: number) => {
+    const newStage = stageIndex + 1;
+    if (project && project.current_stage !== newStage) {
+      updateProject({ current_stage: newStage });
+    }
+  };
 
   if (loading) {
     return (
@@ -79,6 +135,7 @@ export default function AdminProjectDetail() {
   }
 
   const progressPct = (project.current_stage / 5) * 100;
+  const assignedCreative = creatives.find(c => c.id === project.creative_id);
 
   return (
     <div className="max-w-6xl mx-auto pb-20">
@@ -92,13 +149,40 @@ export default function AdminProjectDetail() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                project.status === 'completed' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
-                project.status === 'active' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
-                'bg-orange-500/10 text-orange-600 border-orange-500/20'
-              }`}>
-                {project.status}
-              </span>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowStatusMenu(!showStatusMenu)}
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all flex items-center gap-1.5 ${
+                    project.status === 'completed' ? 'bg-green-500/10 text-green-600 border-green-500/20 hover:bg-green-500/20' :
+                    project.status === 'active' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20 hover:bg-blue-500/20' :
+                    'bg-orange-500/10 text-orange-600 border-orange-500/20 hover:bg-orange-500/20'
+                  }`}
+                >
+                  {project.status}
+                  <ChevronRight size={10} className="rotate-90" />
+                </button>
+                <AnimatePresence>
+                  {showStatusMenu && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowStatusMenu(false)} />
+                      <motion.div 
+                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                        className="absolute top-full left-0 mt-2 w-40 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden"
+                      >
+                        {(["onboarding", "active", "completed"] as const).map(s => (
+                          <button 
+                            key={s} 
+                            onClick={() => updateProject({ status: s })}
+                            className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-muted transition-colors capitalize"
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
               <span className="text-muted-foreground text-xs flex items-center gap-1">
                 <Calendar size={12} />
                 Started {new Date(project.created_at).toLocaleDateString()}
@@ -109,8 +193,8 @@ export default function AdminProjectDetail() {
           
           <div className="flex items-center gap-3">
             <Link to="/dashboard/admin/inbox">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-brand">
-                <MessageSquare size={16} />
+              <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-brand group">
+                <MessageSquare size={16} className="group-hover:scale-110 transition-transform" />
                 Open Chat
               </button>
             </Link>
@@ -120,7 +204,6 @@ export default function AdminProjectDetail() {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Project Status & Client */}
         <div className="lg:col-span-2 space-y-8">
           {/* Progress Card */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
@@ -147,27 +230,31 @@ export default function AdminProjectDetail() {
                 const isActive = stepNum === project.current_stage;
                 
                 return (
-                  <div key={label} className="text-center space-y-2">
+                  <button 
+                    key={label} 
+                    onClick={() => handleStageClick(i)}
+                    className="text-center space-y-2 group focus:outline-none"
+                  >
                     <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center border-2 transition-all ${
-                      isComplete ? "bg-primary border-primary text-primary-foreground" :
+                      isComplete ? "bg-primary border-primary text-primary-foreground group-hover:bg-primary/80" :
                       isActive ? "bg-primary/10 border-primary text-primary animate-pulse" :
-                      "bg-muted border-border text-muted-foreground"
+                      "bg-muted border-border text-muted-foreground group-hover:border-primary/40"
                     }`}>
                       {isComplete ? <CheckCircle2 size={16} /> : <span className="text-xs font-bold">{stepNum}</span>}
                     </div>
-                    <span className={`text-[10px] font-bold uppercase tracking-tight block truncate px-1 ${
-                      isActive ? "text-primary" : "text-muted-foreground"
+                    <span className={`text-[10px] font-bold uppercase tracking-tight block truncate px-1 transition-colors ${
+                      isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
                     }`}>
                       {label}
                     </span>
-                  </div>
+                  </button>
                 );
               })}
             </div>
           </div>
 
           {/* Details Tabs */}
-          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden min-h-[400px]">
             <div className="flex border-b border-border bg-muted/30">
               {[
                 { id: "overview", label: "Overview", icon: FileText },
@@ -190,22 +277,22 @@ export default function AdminProjectDetail() {
               ))}
             </div>
             
-            <div className="p-8 min-h-[300px]">
+            <div className="p-8">
               <AnimatePresence mode="wait">
                 {activeTab === "overview" && (
                   <motion.div
-                    key="overview"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    key="overview" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                     className="space-y-6"
                   >
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Financials</h4>
-                        <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                        <div className="p-4 rounded-xl bg-muted/50 border border-border group relative">
                           <p className="text-xs text-muted-foreground mb-1">Total Project Value</p>
                           <p className="text-2xl font-bold">{project.total_price.toLocaleString()} TND</p>
+                          <button className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-muted rounded-lg border border-border">
+                            <MoreVertical size={14} />
+                          </button>
                         </div>
                       </div>
                       <div className="space-y-4">
@@ -226,34 +313,132 @@ export default function AdminProjectDetail() {
                 
                 {activeTab === "deliverables" && (
                   <motion.div
-                    key="deliverables"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="flex flex-col items-center justify-center py-12 text-center"
+                    key="deliverables" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                    className="space-y-4"
                   >
-                    <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                      <FileText className="text-muted-foreground opacity-20" size={32} />
-                    </div>
-                    <h4 className="font-bold">Deliverables management coming soon</h4>
-                    <p className="text-sm text-muted-foreground max-w-xs mt-2">
-                      Upload and manage concepts directly from this tab. Use the "Project Action" button to upload now.
-                    </p>
+                    {files.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                          <FileText className="text-muted-foreground opacity-20" size={32} />
+                        </div>
+                        <h4 className="font-bold">No files uploaded yet</h4>
+                        <p className="text-sm text-muted-foreground max-w-xs mt-2">
+                          Files uploaded by the team or client will appear here for review.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-border">
+                        {files.map(file => (
+                          <div key={file.id} className="py-4 flex items-center justify-between group">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-primary/5 transition-colors">
+                                <FileText size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold">{file.file_name}</p>
+                                <p className="text-[10px] text-muted-foreground uppercase">{file.type} • {new Date(file.uploaded_at).toLocaleDateString()}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {file.deliverable_status && (
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+                                  file.deliverable_status === 'approved' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
+                                  file.deliverable_status === 'pending' ? 'bg-blue-500/10 text-blue-600 border-blue-500/20' :
+                                  'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                                }`}>
+                                  {file.deliverable_status === 'revision_requested' ? 'Revise' : file.deliverable_status}
+                                </span>
+                              )}
+                              <button 
+                                onClick={() => setSelectedFile(file)}
+                                className="p-2 hover:bg-muted rounded-lg border border-transparent hover:border-border transition-all"
+                              >
+                                <Eye size={16} className="text-muted-foreground" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </motion.div>
                 )}
 
                 {activeTab === "team" && (
                   <motion.div
-                    key="team"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-4"
+                    key="team" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                    className="space-y-6"
                   >
-                    <p className="text-sm text-muted-foreground">Designers and creatives assigned to this project.</p>
-                    <div className="p-4 rounded-xl border border-dashed border-border flex items-center justify-center text-sm text-muted-foreground">
-                      No creatives assigned yet
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Assigned Creatives</h4>
+                      <div className="relative">
+                        <button 
+                          onClick={() => setShowCreativeMenu(!showCreativeMenu)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-all"
+                        >
+                          <Plus size={14} /> Assign
+                        </button>
+                        <AnimatePresence>
+                          {showCreativeMenu && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setShowCreativeMenu(false)} />
+                              <motion.div 
+                                initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
+                                className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden"
+                              >
+                                <div className="p-2 border-b border-border bg-muted/20 text-[10px] font-bold uppercase text-muted-foreground px-4">Select Creative</div>
+                                <div className="max-h-60 overflow-y-auto">
+                                  {creatives.map(c => (
+                                    <button 
+                                      key={c.id} 
+                                      onClick={() => updateProject({ creative_id: c.id })}
+                                      className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-muted transition-colors flex items-center gap-3 border-b border-border/50 last:border-0"
+                                    >
+                                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                                        {c.avatar_url ? <img src={c.avatar_url} className="w-full h-full object-cover" /> : c.full_name?.charAt(0)}
+                                      </div>
+                                      {c.full_name}
+                                    </button>
+                                  ))}
+                                  <button 
+                                    onClick={() => updateProject({ creative_id: null })}
+                                    className="w-full text-left px-4 py-2.5 text-xs font-bold text-destructive hover:bg-destructive/5 transition-colors border-t border-border"
+                                  >
+                                    Unassign All
+                                  </button>
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
+                    
+                    {assignedCreative ? (
+                      <div className="p-4 rounded-xl border border-border flex items-center justify-between bg-muted/5 group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden shadow-sm">
+                            {assignedCreative.avatar_url ? (
+                              <img src={assignedCreative.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-lg font-bold text-primary">{assignedCreative.full_name?.charAt(0)}</span>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-bold text-sm text-foreground">{assignedCreative.full_name}</p>
+                            <p className="text-xs text-muted-foreground">Lead Creative</p>
+                          </div>
+                        </div>
+                        <button onClick={() => updateProject({ creative_id: null })} className="p-2 hover:bg-destructive/10 rounded-lg text-muted-foreground hover:text-destructive transition-all opacity-0 group-hover:opacity-100">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="p-8 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center bg-muted/5">
+                        <User className="text-muted-foreground/20 mb-3" size={32} />
+                        <p className="text-sm font-semibold text-muted-foreground">No creatives assigned</p>
+                        <p className="text-xs text-muted-foreground mt-1 mb-4">Delegate this project to start the work.</p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -261,9 +446,8 @@ export default function AdminProjectDetail() {
           </div>
         </div>
 
-        {/* Right Column: Client & Actions */}
+        {/* Right Column */}
         <div className="space-y-8">
-          {/* Client Card */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm">
             <h3 className="font-bold mb-6 flex items-center gap-2">
               <User size={18} className="text-primary" />
@@ -284,27 +468,56 @@ export default function AdminProjectDetail() {
               </div>
             </div>
             
-            <button className="w-full py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors flex items-center justify-center gap-2">
-              View Client Profile
-              <ChevronRight size={14} />
-            </button>
+            <Link to={`/dashboard/admin/users?search=${encodeURIComponent(project.profiles?.full_name || "")}`}>
+              <button className="w-full py-2.5 rounded-xl border border-border text-xs font-bold hover:bg-muted transition-colors flex items-center justify-center gap-2 uppercase tracking-wider">
+                View Client Profile
+                <ChevronRight size={14} />
+              </button>
+            </Link>
           </div>
 
-          {/* Quick Actions */}
           <div className="bg-card rounded-2xl border border-border p-6 shadow-sm space-y-4">
             <h3 className="font-bold mb-2">Quick Actions</h3>
-            <button className="w-full py-3 rounded-xl bg-muted font-bold text-sm hover:bg-muted/80 transition-colors">
+            <button 
+              onClick={() => setShowStatusMenu(true)}
+              className="w-full py-3 rounded-xl bg-muted font-bold text-xs uppercase tracking-widest hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
+            >
               Update Project Status
             </button>
-            <button className="w-full py-3 rounded-xl bg-muted font-bold text-sm hover:bg-muted/80 transition-colors">
+            <button 
+              onClick={() => setShowCreativeMenu(true)}
+              className="w-full py-3 rounded-xl bg-muted font-bold text-xs uppercase tracking-widest hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
+            >
               Assign Creative
             </button>
-            <button className="w-full py-3 rounded-xl border border-destructive/20 text-destructive font-bold text-sm hover:bg-destructive/5 transition-colors">
+            <button className="w-full py-3 rounded-xl border border-destructive/20 text-destructive font-bold text-xs uppercase tracking-widest hover:bg-destructive/5 transition-all">
               Archive Project
             </button>
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedFile && (
+          <DeliverableReviewOverlay 
+            isOpen={true}
+            onClose={() => setSelectedFile(null)}
+            file={selectedFile}
+            projectTitle={project.title}
+            onReviewSubmitted={() => {
+              fetchData();
+              setSelectedFile(null);
+            }}
+          />
+        )}
+      </AnimatePresence>
+      
+      {updating && (
+        <div className="fixed bottom-8 right-8 bg-card border border-border p-4 rounded-xl shadow-2xl z-50 flex items-center gap-3 animate-in slide-in-from-bottom-4">
+          <Loader2 className="animate-spin text-primary" size={18} />
+          <span className="text-sm font-semibold">Updating project...</span>
+        </div>
+      )}
     </div>
   );
 }

@@ -26,7 +26,9 @@ const useBreadcrumbs = (pathname: string, t: (k: string) => string) => {
                 settings: "Settings", admin: "Admin", users: "Users",
                 team: "Team", creative: "My Tasks",
             };
-            acc.push({ label: labelMap[key] || key, href });
+            const label = labelMap[key] || key;
+            const finalHref = key === "admin" ? "/dashboard/admin" : href;
+            acc.push({ label, href: finalHref });
         } else if (/^[0-9a-f-]{36}$/i.test(seg)) {
             const last = acc[acc.length - 1];
             if (last) acc.push({ label: "Detail", href });
