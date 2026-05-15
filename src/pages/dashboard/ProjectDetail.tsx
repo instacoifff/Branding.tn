@@ -25,6 +25,7 @@ export default function ProjectDetail() {
     const [loading, setLoading] = useState(true);
     const [newMessage, setNewMessage] = useState("");
     const [sendingMsg, setSendingMsg] = useState(false);
+    const [isInternal, setIsInternal] = useState(false);
     const chatContainerRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = useCallback(() => {
@@ -122,37 +123,92 @@ export default function ProjectDetail() {
                         </div>
                     </div>
 
-                    <div className="bg-card rounded-2xl border border-border shadow-sm h-[450px] flex flex-col overflow-hidden">
-                        <div className="px-6 py-4 border-b border-border font-bold bg-muted/20">Chat with the Team</div>
-                        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/5">
-                            {messages.map(m => (
-                                <div key={m.id} className="flex gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0 border border-primary/20">
-                                        {m.profiles?.full_name?.charAt(0)}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-xs font-bold">{m.profiles?.full_name}</span>
-                                            <span className="text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleTimeString()}</span>
-                                        </div>
-                                        <div className="bg-muted px-4 py-2 rounded-2xl rounded-tl-none text-sm border border-border/50">{m.message}</div>
-                                    </div>
-                                </div>
-                            ))}
+                    <div className="bg-card rounded-2xl border border-border shadow-sm h-[500px] flex flex-col overflow-hidden">
+                        <div className="px-6 py-4 border-b border-border font-bold bg-muted/20 flex items-center justify-between">
+                            <span>Chat with the Team</span>
+                            {userProfile?.role !== 'client' && (
+                                <button 
+                                    onClick={() => setIsInternal(!isInternal)}
+                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                                        isInternal 
+                                        ? "bg-orange-500 border-orange-600 text-white shadow-sm" 
+                                        : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                                    }`}
+                                >
+                                    <Clock size={12} />
+                                    Internal Note
+                                </button>
+                            )}
                         </div>
-                        <form className="p-4 border-t border-border flex gap-2 bg-card" onSubmit={async (e) => {
+                        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-4 bg-muted/5">
+                            {messages.map(m => {
+                                const isMe = m.sender_id === userProfile?.id;
+                                const isInternalMsg = m.is_internal;
+
+                                if (isInternalMsg && userProfile?.role === 'client') return null;
+
+                                return (
+                                    <div key={m.id} className={`flex gap-3 ${isMe ? "flex-row-reverse" : ""}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 border shadow-sm ${
+                                            isInternalMsg 
+                                            ? "bg-orange-100 border-orange-200 text-orange-700"
+                                            : "bg-primary/10 border-primary/20 text-primary"
+                                        }`}>
+                                            {m.profiles?.full_name?.charAt(0)}
+                                        </div>
+                                        <div className={`space-y-1 max-w-[80%] ${isMe ? "items-end" : "items-start"}`}>
+                                            <div className={`flex items-center gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
+                                                <span className="text-xs font-bold">
+                                                    {isInternalMsg ? "INTERNAL NOTE" : (isMe ? "You" : m.profiles?.full_name)}
+                                                </span>
+                                                <span className="text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                            <div className={`px-4 py-2 rounded-2xl text-sm border shadow-sm ${
+                                                isInternalMsg 
+                                                ? "bg-orange-500/10 border-orange-500/20 text-orange-950 dark:text-orange-200 italic" 
+                                                : isMe 
+                                                ? "bg-primary text-primary-foreground border-primary rounded-tr-none" 
+                                                : "bg-card border-border/50 rounded-tl-none"
+                                            }`}>
+                                                {m.message}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <form className="p-4 border-t border-border flex flex-col gap-3 bg-card" onSubmit={async (e) => {
                             e.preventDefault();
                             if (!newMessage.trim()) return;
                             setSendingMsg(true);
-                            await supabase.from("project_messages").insert({ project_id: id, sender_id: userProfile?.id, message: newMessage });
+                            await supabase.from("project_messages").insert({ 
+                                project_id: id, 
+                                sender_id: userProfile?.id, 
+                                message: newMessage,
+                                is_internal: isInternal
+                            });
                             setNewMessage("");
+                            setIsInternal(false);
                             setSendingMsg(false);
                             fetchData();
                         }}>
-                            <input className="flex-1 bg-muted/50 border border-border px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." />
-                            <button type="submit" disabled={sendingMsg} className="bg-primary text-primary-foreground p-2.5 rounded-xl shadow-brand hover:opacity-90 transition-all disabled:opacity-50">
-                                <Send size={18} />
-                            </button>
+                            <div className="relative flex gap-2">
+                                <input 
+                                    className={`flex-1 bg-muted/50 border px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
+                                        isInternal 
+                                        ? "border-orange-500/30 focus:ring-orange-500/20" 
+                                        : "border-border focus:ring-primary/20"
+                                    }`} 
+                                    value={newMessage} 
+                                    onChange={(e) => setNewMessage(e.target.value)} 
+                                    placeholder={isInternal ? "Add an internal note..." : "Type a message..."} 
+                                />
+                                <button type="submit" disabled={sendingMsg || !newMessage.trim()} className={`p-2.5 rounded-xl shadow-brand hover:opacity-90 transition-all disabled:opacity-50 text-white ${
+                                    isInternal ? "bg-orange-500" : "bg-primary"
+                                }`}>
+                                    <Send size={18} />
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
