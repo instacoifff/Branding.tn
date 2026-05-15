@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, CheckCircle2, Clock, Palette, FolderOpen, MessageSquare, Send } from "lucide-react";
@@ -263,7 +264,10 @@ const CreativeOverview = () => {
                             className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
                         >
                             <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-                                <h2 className="font-semibold">{pg.title}</h2>
+                                <div className="flex items-center gap-3">
+                                    <h2 className="font-semibold">{pg.title}</h2>
+                                    <Link to={`/dashboard/creative/projects/${pg.id}`} className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold hover:bg-primary/20 transition-all">VIEW DETAILS</Link>
+                                </div>
                                 <span className="text-xs text-muted-foreground">{pg.tasks.filter((t) => t.status === "done").length}/{pg.tasks.length} done</span>
                             </div>
 

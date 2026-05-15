@@ -1,5 +1,5 @@
+import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Sidebar from "./Sidebar";
 import NotificationBell from "./NotificationBell";
@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/i18n";
 import { Menu, ChevronRight, Settings, LogOut, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 /* ── Breadcrumb helpers ── */
 const CRUMB_MAP: Record<string, string> = {
@@ -36,7 +35,7 @@ const useBreadcrumbs = (pathname: string, t: (k: string) => string) => {
     }, []);
 };
 
-const DashboardLayout = () => {
+function DashboardLayout() {
     const { user, profile, signOut } = useAuth();
     const { t } = useI18n();
     const { pathname } = useLocation();
@@ -118,32 +117,24 @@ const DashboardLayout = () => {
                         </button>
 
                         {/* Dropdown */}
-                        <AnimatePresence>
-                            {avatarMenuOpen && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.96, y: -4 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.96, y: -4 }}
-                                    transition={{ duration: 0.15 }}
-                                    className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-1.5 z-50 overflow-hidden"
-                                >
-                                    <Link to="/dashboard/settings" onClick={() => setAvatarMenuOpen(false)}
-                                        className={cn("flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors",
-                                            pathname.startsWith("/dashboard/settings")
-                                                ? "text-primary bg-primary/10"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                                        <Settings size={14} />
-                                        {t("dashboard.settings")}
-                                    </Link>
-                                    <div className="border-t border-border my-1" />
-                                    <button onClick={() => { setAvatarMenuOpen(false); signOut(); }}
-                                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors w-full text-left">
-                                        <LogOut size={14} />
-                                        {t("dashboard.signOut")}
-                                    </button>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        {avatarMenuOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-card border border-border rounded-xl shadow-2xl py-1.5 z-50 overflow-hidden">
+                                <Link to="/dashboard/settings" onClick={() => setAvatarMenuOpen(false)}
+                                    className={cn("flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors",
+                                        pathname.startsWith("/dashboard/settings")
+                                            ? "text-primary bg-primary/10"
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted")}>
+                                    <Settings size={14} />
+                                    {t("dashboard.settings")}
+                                </Link>
+                                <div className="border-t border-border my-1" />
+                                <button onClick={() => { setAvatarMenuOpen(false); signOut(); }}
+                                    className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-colors w-full text-left">
+                                    <LogOut size={14} />
+                                    {t("dashboard.signOut")}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </header>
 

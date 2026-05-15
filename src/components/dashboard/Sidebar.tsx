@@ -1,13 +1,13 @@
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LayoutDashboard, FolderKanban, FileText, Settings, LogOut, Users, Shield, X, Palette, ChevronRight, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
 
 type SidebarProps = { open?: boolean; onClose?: () => void; };
 
-const Sidebar = ({ open, onClose }: SidebarProps) => {
+function Sidebar({ open, onClose }: SidebarProps) {
     const { pathname } = useLocation();
     const { signOut, profile, user } = useAuth();
     const { t, lang, setLang } = useI18n();
@@ -149,27 +149,14 @@ const Sidebar = ({ open, onClose }: SidebarProps) => {
             </aside>
 
             {/* Mobile drawer */}
-            <AnimatePresence>
-                {open && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-40 md:hidden"
-                    >
-                        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
-                        <motion.aside
-                            initial={{ x: -280 }}
-                            animate={{ x: 0 }}
-                            exit={{ x: -280 }}
-                            transition={{ type: "spring", damping: 28, stiffness: 300 }}
-                            className="absolute left-0 top-0 bottom-0 w-72 border-r border-border shadow-2xl"
-                        >
-                            <SidebarContent />
-                        </motion.aside>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {open && (
+                <div className="fixed inset-0 z-40 md:hidden">
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={onClose} />
+                    <aside className="absolute left-0 top-0 bottom-0 w-72 border-r border-border shadow-2xl bg-card">
+                        <SidebarContent />
+                    </aside>
+                </div>
+            )}
         </>
     );
 };

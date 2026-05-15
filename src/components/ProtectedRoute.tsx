@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
     adminOnly?: boolean;
 }
 
-const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
+function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
     const { user, profile, loading } = useAuth();
 
     if (loading) {
@@ -28,6 +28,6 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
     }
 
     return <>{children}</>;
-};
+}
 
 export default ProtectedRoute;

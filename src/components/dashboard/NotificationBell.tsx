@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,7 +16,7 @@ type Notification = {
     reference_id: string | null;
 };
 
-const NotificationBell = () => {
+function NotificationBell() {
     const { user } = useAuth();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [open, setOpen] = useState(false);
@@ -89,11 +89,11 @@ const NotificationBell = () => {
         
         if (n.reference_type === 'project') {
             if (user?.user_metadata?.role === 'admin') {
-                return `/dashboard/admin/project/${n.reference_id}`;
+                return `/dashboard/admin/projects/${n.reference_id}`;
             } else if (user?.user_metadata?.role === 'creative') {
                 return `/dashboard/creative`; // Creatives use the overview dashboard
             } else {
-                return `/dashboard/project/${n.reference_id}`; // Client
+                return `/dashboard/projects/${n.reference_id}`; // Client
             }
         }
         return null;

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { FolderOpen, Plus, Clock, CheckCircle2, Loader2 } from "lucide-react";
+import { FolderOpen, Plus, Clock, CheckCircle2, Loader2, ChevronRight } from "lucide-react";
 import { useI18n } from "@/i18n";
 
 type Project = {
@@ -98,65 +98,81 @@ const Projects = () => {
                         const statusColor = statusColors[project.status] ?? statusColors.onboarding;
                         const progressPct = (project.current_stage / 5) * 100;
                         return (
-                            <motion.div
+                            <Link
                                 key={project.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                                className="bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md transition-shadow"
+                                to={`/dashboard/projects/${project.id}`}
+                                className="block"
                             >
-                                <div className="flex items-start justify-between gap-4 mb-5">
-                                    <div>
-                                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColor} mb-2 inline-block`}>
-                                            {t(`dashboard.status.${project.status}`) || project.status}
-                                        </span>
-                                        <h3 className="text-xl font-semibold">{project.title}</h3>
-                                        <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                                            <span className="flex items-center gap-1">
-                                                <Clock size={13} />
-                                                {new Date(project.created_at).toLocaleDateString()}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    className="bg-card rounded-xl border border-border p-6 shadow-sm hover:shadow-md hover:border-primary/20 transition-all group relative overflow-hidden"
+                                >
+                                    <div className="absolute top-0 right-0 w-1 h-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    
+                                    <div className="flex items-start justify-between gap-4 mb-5">
+                                        <div>
+                                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${statusColor} mb-2 inline-block`}>
+                                                {t(`dashboard.status.${project.status}`) || project.status}
                                             </span>
-                                            {project.deposit_paid ? (
-                                                <span className="flex items-center gap-1 text-green-600">
-                                                    <CheckCircle2 size={13} />
-                                                    {t("dashboard.adminProjectDetail.depositPaid")}
+                                            <h3 className="text-xl font-bold group-hover:text-primary transition-colors">{project.title}</h3>
+                                            <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                                                <span className="flex items-center gap-1.5">
+                                                    <Clock size={13} />
+                                                    {new Date(project.created_at).toLocaleDateString()}
                                                 </span>
-                                            ) : (
-                                                <span className="text-orange-500">{t("dashboard.adminProjectDetail.no")}</span>
-                                            )}
+                                                <div className="w-1 h-1 rounded-full bg-border" />
+                                                {project.deposit_paid ? (
+                                                    <span className="flex items-center gap-1.5 text-green-600 font-medium">
+                                                        <CheckCircle2 size={13} />
+                                                        {t("dashboard.adminProjectDetail.depositPaid")}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-orange-500 font-medium">Deposit Pending</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">{t("brief.total")}</p>
+                                            <p className="text-lg font-black">{project.total_price.toLocaleString()} {t("common.tnd")}</p>
                                         </div>
                                     </div>
-                                    <div className="text-right shrink-0">
-                                        <p className="text-xs text-muted-foreground">{t("brief.total")}</p>
-                                        <p className="text-lg font-bold">{project.total_price.toLocaleString()} {t("common.tnd")}</p>
-                                    </div>
-                                </div>
 
-                                <div className="mb-2">
-                                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                                        <span>
-                                            {t("dashboard.projectsPage.stage")} {project.current_stage}: {stageLabels[project.current_stage - 1]}
-                                        </span>
-                                        <span>{Math.round(progressPct)}%</span>
-                                    </div>
-                                    <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
-                                        <div
-                                            className="bg-primary h-full rounded-full transition-all duration-700"
-                                            style={{ width: `${progressPct}%` }}
-                                        />
-                                    </div>
-                                    <div className="flex justify-between mt-2">
-                                        {stageLabels.map((label, idx) => (
-                                            <span
-                                                key={label}
-                                                className={`text-[10px] font-medium ${idx < project.current_stage ? "text-primary" : "text-muted-foreground"}`}
-                                            >
-                                                {label}
+                                    <div className="mb-2">
+                                        <div className="flex justify-between text-[11px] text-muted-foreground mb-2">
+                                            <span className="font-semibold uppercase tracking-tight">
+                                                {t("dashboard.projectsPage.stage")} {project.current_stage}: {stageLabels[project.current_stage - 1]}
                                             </span>
-                                        ))}
+                                            <span className="font-bold">{Math.round(progressPct)}%</span>
+                                        </div>
+                                        <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
+                                            <motion.div
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${progressPct}%` }}
+                                                transition={{ duration: 1, ease: "easeOut" }}
+                                                className="bg-primary h-full rounded-full shadow-[0_0_10px_rgba(var(--primary),0.3)]"
+                                            />
+                                        </div>
+                                        <div className="flex justify-between mt-3 gap-1">
+                                            {stageLabels.map((label, idx) => (
+                                                <div key={label} className="flex flex-col items-center gap-1 flex-1">
+                                                    <div className={`w-full h-1 rounded-full transition-all ${idx < project.current_stage ? "bg-primary" : "bg-muted"}`} />
+                                                    <span className={`text-[9px] font-bold uppercase truncate w-full text-center ${idx < project.current_stage ? "text-primary" : "text-muted-foreground/50"}`}>
+                                                        {label}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            </motion.div>
+
+                                    <div className="mt-5 pt-4 border-t border-border flex justify-end">
+                                        <div className="flex items-center gap-1.5 text-xs font-bold text-primary group-hover:translate-x-1 transition-transform">
+                                            MANAGE PROJECT <ChevronRight size={14} />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </Link>
                         );
                     })}
                 </div>

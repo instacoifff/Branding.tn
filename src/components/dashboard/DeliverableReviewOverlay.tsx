@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, RotateCcw, Loader2, FileText, Image, Film, ExternalLink } from "lucide-react";
+import { X, CheckCircle2, RotateCcw, Loader2, FileText, Image as ImageIcon, Film as FilmIcon, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -76,20 +75,13 @@ const DeliverableReviewOverlay = ({
   };
 
   return (
-    <AnimatePresence>
+    <>
       {isOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
           onClick={onClose}
         >
-          <motion.div
-            initial={{ scale: 0.92, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.92, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          <div
             className="relative w-full max-w-2xl max-h-[90vh] bg-card rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -198,11 +190,7 @@ const DeliverableReviewOverlay = ({
                     </button>
                   </div>
                 ) : action === "approve" ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-3"
-                  >
+                  <div className="space-y-3">
                     <p className="text-sm text-foreground font-medium">
                       Confirm approval for{" "}
                       <span className="text-green-600">"{file.file_name}"</span>?
@@ -227,13 +215,9 @@ const DeliverableReviewOverlay = ({
                         {submitting ? "Submitting..." : "Confirm Approval"}
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 ) : (
-                  <motion.div
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="space-y-3"
-                  >
+                  <div className="space-y-3">
                     <p className="text-sm text-foreground font-medium">
                       What changes are needed?
                     </p>
@@ -268,14 +252,14 @@ const DeliverableReviewOverlay = ({
                         {submitting ? "Sending..." : "Send Revision Request"}
                       </button>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
               </div>
             )}
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 };
 
