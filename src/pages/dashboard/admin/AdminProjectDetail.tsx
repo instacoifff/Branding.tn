@@ -109,7 +109,7 @@ export default function AdminProjectDetail() {
           </div>
           
           <div className="flex items-center gap-3">
-            <DeliverableReviewOverlay projectId={project.id} />
+            {/* <DeliverableReviewOverlay projectId={project.id} /> */}
             <Link to="/dashboard/admin/inbox">
               <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-all shadow-brand">
                 <MessageSquare size={16} />
