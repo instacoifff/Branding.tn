@@ -13,7 +13,8 @@ import {
     CheckCheck,
     Loader2,
     ChevronRight,
-    Shield
+    Shield,
+    Zap
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -47,6 +48,12 @@ type Project = {
     } | null;
 };
 
+type CannedResponse = {
+    id: string;
+    shortcut: string;
+    response_text: string;
+};
+
 export default function UnifiedInbox() {
     const { user, profile } = useAuth();
     const { t } = useI18n();
@@ -59,8 +66,19 @@ export default function UnifiedInbox() {
     const [sendingMsg, setSendingMsg] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [isInternal, setIsInternal] = useState(false);
+    const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
+    const [showCanned, setShowCanned] = useState(false);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (!user || profile?.role === 'client') return;
+        const fetchCanned = async () => {
+            const { data } = await supabase.from("canned_responses").select("*");
+            setCannedResponses(data || []);
+        };
+        fetchCanned();
+    }, [user, profile]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -303,6 +321,56 @@ export default function UnifiedInbox() {
                                         <Button type="button" variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
                                             <Paperclip size={18} />
                                         </Button>
+                                        {profile?.role !== 'client' && (
+                                            <div className="relative">
+                                                <Button 
+                                                    type="button" 
+                                                    variant={showCanned ? "default" : "ghost"} 
+                                                    size="icon"
+                                                    onClick={() => setShowCanned(!showCanned)}
+                                                    className={`text-muted-foreground ${showCanned ? 'bg-primary text-primary-foreground' : 'hover:text-primary'}`}
+                                                    title="Canned Responses"
+                                                >
+                                                    <Zap size={18} />
+                                                </Button>
+                                                <AnimatePresence>
+                                                    {showCanned && (
+                                                        <motion.div 
+                                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                            className="absolute bottom-[120%] left-0 mb-2 w-72 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-50"
+                                                        >
+                                                            <div className="px-3 py-2 border-b border-border bg-muted/20">
+                                                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Quick Replies</span>
+                                                            </div>
+                                                            <div className="max-h-48 overflow-y-auto p-1 space-y-1">
+                                                                {cannedResponses.length === 0 ? (
+                                                                    <p className="text-xs text-center text-muted-foreground py-4">No responses found</p>
+                                                                ) : (
+                                                                    cannedResponses.map((cr) => (
+                                                                        <button
+                                                                            key={cr.id}
+                                                                            type="button"
+                                                                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors"
+                                                                            onClick={() => {
+                                                                                setNewMessage(prev => prev ? prev + ' ' + cr.response_text : cr.response_text);
+                                                                                setShowCanned(false);
+                                                                            }}
+                                                                        >
+                                                                            <div className="flex items-center gap-2 mb-1">
+                                                                                <Badge variant="outline" className="text-[10px] bg-primary/5 border-primary/20 text-primary uppercase font-bold">/{cr.shortcut}</Badge>
+                                                                            </div>
+                                                                            <p className="text-xs text-muted-foreground line-clamp-2">{cr.response_text}</p>
+                                                                        </button>
+                                                                    ))
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        )}
                                         {profile?.role !== 'client' && (
                                             <Button 
                                                 type="button" 
