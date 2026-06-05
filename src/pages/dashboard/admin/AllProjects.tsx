@@ -61,7 +61,7 @@ const AllProjects = () => {
 
     const [newTitle, setNewTitle] = useState("");
     const [selectedClient, setSelectedClient] = useState("");
-    const [selectedCreative, setSelectedCreative] = useState("");
+    const [selectedCreatives, setSelectedCreatives] = useState<string[]>([]);
     const [newPrice, setNewPrice] = useState("0");
     const [adding, setAdding] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -98,23 +98,36 @@ const AllProjects = () => {
             return;
         }
         setAdding(true);
-        const { error } = await supabase.from("projects").insert({
+        const { data: newProject, error } = await supabase.from("projects").insert({
             title: newTitle.trim(),
             client_id: selectedClient,
-            creative_id: selectedCreative || null,
             total_price: parseFloat(newPrice) || 0,
             status: "onboarding",
             current_stage: 1
-        });
+        }).select("id").single();
+        
         if (error) {
             toast.error("Failed to create project");
-        } else {
+        } else if (newProject) {
+            if (selectedCreatives.length > 0) {
+                const creativeInserts = selectedCreatives.map(id => ({
+                    project_id: newProject.id,
+                    creative_id: id
+                }));
+                await supabase.from("project_creatives").insert(creativeInserts);
+            }
             toast.success("Project created successfully");
             setShowAddModal(false);
-            setNewTitle(""); setSelectedClient(""); setSelectedCreative(""); setNewPrice("0");
+            setNewTitle(""); setSelectedClient(""); setSelectedCreatives([]); setNewPrice("0");
             fetchProjects(true);
         }
         setAdding(false);
+    };
+
+    const toggleCreativeSelection = (id: string) => {
+        setSelectedCreatives(prev => 
+            prev.includes(id) ? prev.filter(c => c !== id) : [...prev, id]
+        );
     };
 
     const handleDeleteProject = async (projectId: string) => {
@@ -389,12 +402,27 @@ const AllProjects = () => {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Assign Creative</label>
-                                    <select value={selectedCreative} onChange={(e) => setSelectedCreative(e.target.value)}
-                                        className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 outline-none appearance-none">
-                                        <option value="">Delegate later</option>
-                                        {creatives.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
-                                    </select>
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Assign Creatives</label>
+                                    <div className="bg-muted/30 border border-border rounded-xl p-2 max-h-40 overflow-y-auto space-y-1">
+                                        {creatives.map(c => {
+                                            const isSelected = selectedCreatives.includes(c.id);
+                                            return (
+                                                <div 
+                                                    key={c.id} 
+                                                    onClick={() => toggleCreativeSelection(c.id)}
+                                                    className={`px-3 py-2 text-sm rounded-lg cursor-pointer transition-all flex items-center justify-between ${
+                                                        isSelected ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted text-foreground"
+                                                    }`}
+                                                >
+                                                    {c.full_name}
+                                                    {isSelected && <CheckCircle2 size={16} />}
+                                                </div>
+                                            );
+                                        })}
+                                        {creatives.length === 0 && (
+                                            <p className="text-xs text-muted-foreground p-2 text-center">No creatives found</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="space-y-1.5">

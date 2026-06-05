@@ -90,11 +90,15 @@ const CreativeOverview = () => {
         const fetchMyProjects = async () => {
             if (!user) return;
 
-            const { data: projects } = await supabase
-                .from("projects")
-                .select("id, title, creative_brief, tasks(*), project_messages(*, profiles(full_name, avatar_url))")
-                .eq("creative_id", user.id)
-                .order("created_at", { ascending: false });
+            const { data: projectLinks } = await supabase
+                .from("project_creatives")
+                .select("projects(id, title, creative_brief, created_at, tasks(*), project_messages(*, profiles(full_name, avatar_url)))")
+                .eq("creative_id", user.id);
+
+            const projects = (projectLinks || [])
+                .map((link: any) => link.projects)
+                .filter(Boolean)
+                .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
             const mapped: GroupedProject[] = (projects || []).map((p: any) => ({
                 id: p.id,

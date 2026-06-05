@@ -30,7 +30,8 @@ type Project = {
   current_stage: number;
   total_price: number;
   client_id: string;
-  creative_id: string | null;
+  creative_id?: string | null; // Deprecated, but keeping for type compatibility until completely removed
+  project_creatives?: { creative_id: string; profiles: { full_name: string; avatar_url: string } }[];
   created_at: string;
   profiles: {
     full_name: string | null;
@@ -76,12 +77,12 @@ export default function AdminProjectDetail() {
     if (!id) return;
     
     const [{ data: proj }, { data: fileData }, { data: creativeData }] = await Promise.all([
-      supabase.from("projects").select("*, profiles!client_id(full_name, email, avatar_url)").eq("id", id).single(),
+      supabase.from("projects").select("*, profiles!client_id(full_name, email, avatar_url), project_creatives(creative_id, profiles!creative_id(full_name, avatar_url))").eq("id", id).single(),
       supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
       supabase.from("profiles").select("id, full_name, avatar_url").eq("role", "creative")
     ]);
 
-    if (proj) setProject(proj as Project);
+    if (proj) setProject(proj as unknown as Project);
     if (fileData) setFiles(fileData as FileType[]);
     if (creativeData) setCreatives(creativeData as Creative[]);
     setLoading(false);
@@ -114,6 +115,31 @@ export default function AdminProjectDetail() {
     }
   };
 
+  const toggleCreativeAssignment = async (creativeId: string) => {
+    if (!project) return;
+    setUpdating(true);
+    
+    const isAssigned = project.project_creatives?.some(pc => pc.creative_id === creativeId);
+    
+    if (isAssigned) {
+      await supabase.from("project_creatives").delete().eq("project_id", project.id).eq("creative_id", creativeId);
+    } else {
+      await supabase.from("project_creatives").insert({ project_id: project.id, creative_id: creativeId });
+    }
+    
+    await fetchData(); // Refresh to get the updated project_creatives relation
+    setUpdating(false);
+  };
+
+  const unassignAllCreatives = async () => {
+    if (!project) return;
+    setUpdating(true);
+    await supabase.from("project_creatives").delete().eq("project_id", project.id);
+    await fetchData();
+    setUpdating(false);
+    setShowCreativeMenu(false);
+  };
+
   if (loading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -135,7 +161,11 @@ export default function AdminProjectDetail() {
   }
 
   const progressPct = (project.current_stage / 5) * 100;
-  const assignedCreative = creatives.find(c => c.id === project.creative_id);
+  const assignedCreatives = project.project_creatives?.map(pc => ({
+    id: pc.creative_id,
+    full_name: pc.profiles?.full_name,
+    avatar_url: pc.profiles?.avatar_url
+  })) || [];
 
   return (
     <div className="max-w-6xl mx-auto pb-20">
@@ -385,22 +415,28 @@ export default function AdminProjectDetail() {
                                 initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
                                 className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-xl shadow-xl z-20 overflow-hidden"
                               >
-                                <div className="p-2 border-b border-border bg-muted/20 text-[10px] font-bold uppercase text-muted-foreground px-4">Select Creative</div>
+                                <div className="p-2 border-b border-border bg-muted/20 text-[10px] font-bold uppercase text-muted-foreground px-4">Select Creatives</div>
                                 <div className="max-h-60 overflow-y-auto">
-                                  {creatives.map(c => (
-                                    <button 
-                                      key={c.id} 
-                                      onClick={() => updateProject({ creative_id: c.id })}
-                                      className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-muted transition-colors flex items-center gap-3 border-b border-border/50 last:border-0"
-                                    >
-                                      <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                                        {c.avatar_url ? <img src={c.avatar_url} className="w-full h-full object-cover" /> : c.full_name?.charAt(0)}
-                                      </div>
-                                      {c.full_name}
-                                    </button>
-                                  ))}
+                                  {creatives.map(c => {
+                                    const isAssigned = assignedCreatives.some(ac => ac.id === c.id);
+                                    return (
+                                      <button 
+                                        key={c.id} 
+                                        onClick={() => toggleCreativeAssignment(c.id)}
+                                        className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-muted transition-colors flex items-center justify-between border-b border-border/50 last:border-0"
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
+                                            {c.avatar_url ? <img src={c.avatar_url} className="w-full h-full object-cover" /> : c.full_name?.charAt(0)}
+                                          </div>
+                                          <span className="truncate">{c.full_name}</span>
+                                        </div>
+                                        {isAssigned && <CheckCircle2 size={14} className="text-primary shrink-0" />}
+                                      </button>
+                                    );
+                                  })}
                                   <button 
-                                    onClick={() => updateProject({ creative_id: null })}
+                                    onClick={unassignAllCreatives}
                                     className="w-full text-left px-4 py-2.5 text-xs font-bold text-destructive hover:bg-destructive/5 transition-colors border-t border-border"
                                   >
                                     Unassign All
@@ -413,30 +449,34 @@ export default function AdminProjectDetail() {
                       </div>
                     </div>
                     
-                    {assignedCreative ? (
-                      <div className="p-4 rounded-xl border border-border flex items-center justify-between bg-muted/5 group">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden shadow-sm">
-                            {assignedCreative.avatar_url ? (
-                              <img src={assignedCreative.avatar_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-lg font-bold text-primary">{assignedCreative.full_name?.charAt(0)}</span>
-                            )}
+                    {assignedCreatives.length > 0 ? (
+                      <div className="grid gap-3">
+                        {assignedCreatives.map(assigned => (
+                          <div key={assigned.id} className="p-4 rounded-xl border border-border flex items-center justify-between bg-muted/5 group">
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden shadow-sm">
+                                {assigned.avatar_url ? (
+                                  <img src={assigned.avatar_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-sm font-bold text-primary">{assigned.full_name?.charAt(0)}</span>
+                                )}
+                              </div>
+                              <div>
+                                <p className="font-bold text-sm text-foreground">{assigned.full_name}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Creative</p>
+                              </div>
+                            </div>
+                            <button onClick={() => toggleCreativeAssignment(assigned.id)} className="p-2 hover:bg-destructive/10 rounded-lg text-muted-foreground hover:text-destructive transition-all opacity-0 group-hover:opacity-100">
+                              <Trash2 size={16} />
+                            </button>
                           </div>
-                          <div>
-                            <p className="font-bold text-sm text-foreground">{assignedCreative.full_name}</p>
-                            <p className="text-xs text-muted-foreground">Lead Creative</p>
-                          </div>
-                        </div>
-                        <button onClick={() => updateProject({ creative_id: null })} className="p-2 hover:bg-destructive/10 rounded-lg text-muted-foreground hover:text-destructive transition-all opacity-0 group-hover:opacity-100">
-                          <Trash2 size={16} />
-                        </button>
+                        ))}
                       </div>
                     ) : (
                       <div className="p-8 rounded-2xl border-2 border-dashed border-border flex flex-col items-center justify-center text-center bg-muted/5">
                         <User className="text-muted-foreground/20 mb-3" size={32} />
                         <p className="text-sm font-semibold text-muted-foreground">No creatives assigned</p>
-                        <p className="text-xs text-muted-foreground mt-1 mb-4">Delegate this project to start the work.</p>
+                        <p className="text-xs text-muted-foreground mt-1 mb-4">Assign creatives to start the work.</p>
                       </div>
                     )}
                   </motion.div>

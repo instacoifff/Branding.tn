@@ -88,22 +88,30 @@ export default function UnifiedInbox() {
         const fetchProjects = async () => {
             if (!user || !profile) return;
             
-            let query = supabase.from("projects").select("*, profiles!client_id(full_name, avatar_url)");
-            
-            if (profile.role === 'client') {
-                query = query.eq("client_id", user.id);
-            } else if (profile.role === 'creative') {
-                query = query.eq("creative_id", user.id);
+            if (profile.role === 'creative') {
+                const { data } = await supabase
+                    .from("project_creatives")
+                    .select("projects(*, profiles!client_id(full_name, avatar_url))")
+                    .eq("creative_id", user.id);
+                
+                const projs = (data || [])
+                    .map((d: any) => d.projects)
+                    .filter(Boolean)
+                    .sort((a: any, b: any) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime());
+                
+                setProjects(projs as any);
+                if (projs.length > 0) setActiveProjectId(projs[0].id);
+            } else {
+                let query = supabase.from("projects").select("*, profiles!client_id(full_name, avatar_url)");
+                if (profile.role === 'client') {
+                    query = query.eq("client_id", user.id);
+                }
+                const { data } = await query.order("updated_at", { ascending: false });
+                setProjects((data as any) || []);
+                if (data && data.length > 0) setActiveProjectId(data[0].id);
             }
-            // Admin sees all
-
-            const { data } = await query.order("updated_at", { ascending: false });
-            setProjects(data || []);
+            
             setLoadingProjects(false);
-            
-            if (data && data.length > 0) {
-                setActiveProjectId(data[0].id);
-            }
         };
 
         fetchProjects();
