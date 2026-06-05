@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, CheckCircle2, Clock, Palette, FolderOpen, MessageSquare, Send } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, Palette, FolderOpen, MessageSquare, Send, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/i18n";
 import { toast } from "sonner";
 
@@ -36,6 +37,12 @@ type ProjectMessage = {
     profiles?: { full_name: string; avatar_url: string };
 };
 
+type CannedResponse = {
+    id: string;
+    shortcut: string;
+    response_text: string;
+};
+
 const STATUS_LABELS: Record<Task["status"], string> = {
     todo: "To Do",
     doing: "In Progress",
@@ -59,6 +66,10 @@ const CreativeOverview = () => {
     const [sendingMsg, setSendingMsg] = useState(false);
     const chatContainerRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
+    // Canned responses
+    const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
+    const [showCanned, setShowCanned] = useState<string | null>(null); // stores the projectId of open popup
+
     useEffect(() => {
         Object.values(chatContainerRefs.current).forEach(container => {
             if (container) {
@@ -66,6 +77,14 @@ const CreativeOverview = () => {
             }
         });
     }, [grouped]);
+
+    useEffect(() => {
+        const fetchCanned = async () => {
+            const { data } = await supabase.from("canned_responses").select("*").order("shortcut");
+            setCannedResponses(data || []);
+        };
+        fetchCanned();
+    }, []);
 
     useEffect(() => {
         const fetchMyProjects = async () => {
@@ -393,9 +412,9 @@ const CreativeOverview = () => {
                                     )}
                                 </div>
                                 <div className="p-4 bg-card border-t border-border shrink-0">
-                                    <form onSubmit={(e) => handleSendMessage(e, pg.id)} className="flex items-end gap-2">
+                                    <form onSubmit={(e) => handleSendMessage(e, pg.id)} className="space-y-2">
                                         <textarea
-                                            className="flex-1 bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none min-h-[46px]"
+                                            className="w-full bg-muted/50 border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none min-h-[46px]"
                                             placeholder="Type your message..."
                                             rows={1}
                                             value={newMessages[pg.id] || ""}
@@ -407,13 +426,74 @@ const CreativeOverview = () => {
                                                 }
                                             }}
                                         />
-                                        <button
-                                            type="submit"
-                                            disabled={!(newMessages[pg.id]?.trim()) || sendingMsg}
-                                            className="bg-primary text-primary-foreground h-[46px] w-[46px] rounded-xl flex items-center justify-center shrink-0 hover:bg-primary/90 transition-colors disabled:opacity-50"
-                                        >
-                                            {sendingMsg ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                                        </button>
+                                        <div className="flex items-center justify-between">
+                                            {/* Canned Response button */}
+                                            <div className="relative">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCanned(showCanned === pg.id ? null : pg.id)}
+                                                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
+                                                        showCanned === pg.id
+                                                        ? "bg-primary text-primary-foreground border-primary"
+                                                        : "bg-muted border-border text-muted-foreground hover:text-foreground"
+                                                    }`}
+                                                    title="Quick Replies"
+                                                >
+                                                    <Zap size={13} />
+                                                    Quick Replies
+                                                </button>
+                                                <AnimatePresence>
+                                                    {showCanned === pg.id && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                            transition={{ duration: 0.15 }}
+                                                            className="absolute bottom-[110%] left-0 mb-2 w-72 bg-card border border-border rounded-xl shadow-xl overflow-hidden z-50"
+                                                        >
+                                                            <div className="px-3 py-2 border-b border-border bg-muted/30 flex items-center gap-2">
+                                                                <Zap size={12} className="text-primary" />
+                                                                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Quick Replies</span>
+                                                            </div>
+                                                            <div className="max-h-52 overflow-y-auto p-1.5 space-y-1">
+                                                                {cannedResponses.length === 0 ? (
+                                                                    <p className="text-xs text-center text-muted-foreground py-4">No quick replies yet</p>
+                                                                ) : (
+                                                                    cannedResponses.map((cr) => (
+                                                                        <button
+                                                                            key={cr.id}
+                                                                            type="button"
+                                                                            className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors group"
+                                                                            onClick={() => {
+                                                                                setNewMessages(prev => ({
+                                                                                    ...prev,
+                                                                                    [pg.id]: prev[pg.id] ? prev[pg.id] + ' ' + cr.response_text : cr.response_text
+                                                                                }));
+                                                                                setShowCanned(null);
+                                                                            }}
+                                                                        >
+                                                                            <div className="flex items-center gap-2 mb-0.5">
+                                                                                <Badge variant="outline" className="text-[10px] bg-primary/5 border-primary/20 text-primary uppercase font-bold py-0">/{cr.shortcut}</Badge>
+                                                                            </div>
+                                                                            <p className="text-xs text-muted-foreground line-clamp-2 group-hover:text-foreground transition-colors">{cr.response_text}</p>
+                                                                        </button>
+                                                                    ))
+                                                                )}
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                            {/* Send button */}
+                                            <button
+                                                type="submit"
+                                                disabled={!(newMessages[pg.id]?.trim()) || sendingMsg}
+                                                className="bg-primary text-primary-foreground h-[38px] px-5 rounded-xl flex items-center gap-2 shrink-0 hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm font-medium"
+                                            >
+                                                {sendingMsg ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                                                Send
+                                            </button>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
