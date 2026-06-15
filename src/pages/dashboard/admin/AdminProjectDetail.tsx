@@ -77,7 +77,7 @@ export default function AdminProjectDetail() {
     if (!id) return;
     
     const [{ data: proj }, { data: fileData }, { data: creativeData }] = await Promise.all([
-      supabase.from("projects").select("*, profiles!client_id(full_name, email, avatar_url), project_creatives(creative_id, profiles!creative_id(full_name, avatar_url))").eq("id", id).single(),
+      supabase.from("projects").select("*, profiles!client_id(full_name, email, avatar_url), project_creatives(creative_id, profiles(full_name, avatar_url))").eq("id", id).single(),
       supabase.from("files").select("*").eq("project_id", id).order("uploaded_at", { ascending: false }),
       supabase.from("profiles").select("id, full_name, avatar_url").eq("role", "creative")
     ]);
