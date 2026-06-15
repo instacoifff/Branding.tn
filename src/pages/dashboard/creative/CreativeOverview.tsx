@@ -3,14 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, CheckCircle2, Clock, Palette, FolderOpen, MessageSquare, Send, Zap } from "lucide-react";
+import { Loader2, CheckCircle2, Clock, Palette, MessageSquare, Send, Zap } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/i18n";
 import { toast } from "sonner";
-import { useCreativeProjects, type Task, type GroupedProject, type ProjectMessage, type CannedResponse } from "@/hooks/queries/useCreativeProjects";
+import { useCreativeProjects, type Task, type GroupedProject, type CannedResponse } from "@/hooks/queries/useCreativeProjects";
 
 // Types imported from useCreativeProjects
 
@@ -49,7 +49,7 @@ const CreativeOverview = () => {
         });
     }, [grouped]);
 
-    const { data, isLoading } = useCreativeProjects(user?.id);
+    const { data } = useCreativeProjects(user?.id);
 
     useEffect(() => {
         if (data) {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CheckCircle2, RotateCcw, Loader2, FileText, Image as ImageIcon, Film as FilmIcon, ExternalLink } from "lucide-react";
+import { X, CheckCircle2, RotateCcw, Loader2, FileText, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 

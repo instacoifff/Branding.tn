@@ -119,7 +119,7 @@ export default function HealthDashboard() {
                         </h2>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {data?.avgStageTime.map((stage, idx) => (
+                        {data?.avgStageTime.map((stage) => (
                             <div key={stage.stage} className="bg-muted/30 border border-border rounded-xl p-4 text-center">
                                 <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wider">{stage.stage}</p>
                                 <p className={`text-3xl font-bold ${stage.days > 3 ? 'text-red-500' : 'text-foreground'}`}>
