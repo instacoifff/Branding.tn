@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Users, FolderKanban, DollarSign, TrendingUp } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { Link } from "react-router-dom";
 import { useI18n } from "@/i18n";
+import { useAdminStats } from "@/hooks/queries/useAdminStats";
 import {
     BarChart,
     Bar,
@@ -33,77 +32,19 @@ const STATUS_COLORS: Record<string, string> = {
 
 const AdminOverview = () => {
     const { t } = useI18n();
-    const [stats, setStats] = useState({
-        totalProjects: 0,
-        activeClients: 0,
-        totalRevenue: 0,
-        pendingBriefs: 0,
-    });
-    const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
-    const [statusChartData, setStatusChartData] = useState<{ name: string; count: number; fill: string }[]>([]);
-    const [revenueChartData, setRevenueChartData] = useState<{ month: string; revenue: number }[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { data, isLoading } = useAdminStats();
 
-    useEffect(() => {
-        const fetchAdminData = async () => {
-            // Fetch recent projects with profiles
-            const { data: projects } = await supabase
-                .from("projects")
-                .select("*, profiles!client_id(full_name)")
-                .order("created_at", { ascending: false })
-                .limit(5);
+    if (isLoading || !data) return <div className="p-8 text-muted-foreground">{t("common.loading")}</div>;
 
-            // Fetch ALL projects for aggregations
-            const { data: allProjects } = await supabase
-                .from("projects")
-                .select("id, status, total_price, created_at");
+    const { stats, recentProjects, statusCounts, revenueByMonth } = data;
 
-            // Counts
-            const [{ count: projectCount }, { count: clientCount }, { count: pendingCount }] =
-                await Promise.all([
-                    supabase.from("projects").select("*", { count: "exact", head: true }),
-                    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("role", "client"),
-                    supabase.from("projects").select("*", { count: "exact", head: true }).eq("status", "onboarding"),
-                ]);
+    const statusData = [
+        { name: t("dashboard.status.onboarding"), count: statusCounts.onboarding, fill: STATUS_COLORS.onboarding },
+        { name: t("dashboard.status.active"), count: statusCounts.active, fill: STATUS_COLORS.active },
+        { name: t("dashboard.status.completed"), count: statusCounts.completed, fill: STATUS_COLORS.completed },
+    ];
 
-            // Real revenue aggregation
-            const totalRevenue = (allProjects ?? []).reduce((sum, p) => sum + (p.total_price ?? 0), 0);
-
-            // Status chart data
-            const statusCounts: Record<string, number> = { onboarding: 0, active: 0, completed: 0 };
-            (allProjects ?? []).forEach((p) => { if (statusCounts[p.status] !== undefined) statusCounts[p.status]++; });
-            const statusData = [
-                { name: t("dashboard.status.onboarding"), count: statusCounts.onboarding, fill: STATUS_COLORS.onboarding },
-                { name: t("dashboard.status.active"), count: statusCounts.active, fill: STATUS_COLORS.active },
-                { name: t("dashboard.status.completed"), count: statusCounts.completed, fill: STATUS_COLORS.completed },
-            ];
-
-            // Revenue by month — last 6 months
-            const monthMap: Record<string, number> = {};
-            const now = new Date();
-            for (let i = 5; i >= 0; i--) {
-                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                const key = d.toLocaleString("default", { month: "short", year: "2-digit" });
-                monthMap[key] = 0;
-            }
-            (allProjects ?? []).forEach((p) => {
-                const d = new Date(p.created_at);
-                const key = d.toLocaleString("default", { month: "short", year: "2-digit" });
-                if (key in monthMap) monthMap[key] += p.total_price ?? 0;
-            });
-            const revenueData = Object.entries(monthMap).map(([month, revenue]) => ({ month, revenue }));
-
-            setStats({ totalProjects: projectCount ?? 0, activeClients: clientCount ?? 0, totalRevenue, pendingBriefs: pendingCount ?? 0 });
-            setRecentProjects((projects as RecentProject[]) ?? []);
-            setStatusChartData(statusData);
-            setRevenueChartData(revenueData);
-            setLoading(false);
-        };
-
-        fetchAdminData();
-    }, []);
-
-    if (loading) return <div className="p-8 text-muted-foreground">{t("common.loading")}</div>;
+    const revenueData = Object.entries(revenueByMonth).map(([month, revenue]) => ({ month, revenue }));
 
     const statCards = [
         { label: t("dashboard.totalProjects"), value: stats.totalProjects, icon: FolderKanban, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -153,7 +94,7 @@ const AdminOverview = () => {
                         Projects by Status
                     </h2>
                     <ResponsiveContainer width="100%" height={180}>
-                        <BarChart data={statusChartData} barSize={32}>
+                        <BarChart data={statusData} barSize={32}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                             <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                             <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
@@ -162,7 +103,7 @@ const AdminOverview = () => {
                                 cursor={{ fill: "hsl(var(--muted))" }}
                             />
                             <Bar dataKey="count" radius={[6, 6, 0, 0]}>
-                                {statusChartData.map((entry, idx) => (
+                                {statusData.map((entry, idx) => (
                                     <rect key={idx} fill={entry.fill} />
                                 ))}
                             </Bar>
@@ -181,7 +122,7 @@ const AdminOverview = () => {
                         Revenue (Last 6 Months) — TND
                     </h2>
                     <ResponsiveContainer width="100%" height={180}>
-                        <AreaChart data={revenueChartData}>
+                        <AreaChart data={revenueData}>
                             <defs>
                                 <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="hsl(270 75% 65%)" stopOpacity={0.25} />

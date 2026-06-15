@@ -184,8 +184,10 @@ export default function Index() {
           <div className="space-y-6">
             {SERVICES.map((svc, i) => (
               <motion.div key={svc.title} variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-50px" }}
-                className="group rounded-3xl border border-border overflow-hidden hover:border-primary/20 transition-all duration-500 bg-card hover:shadow-card">
-                <div className={`grid ${i === 0 ? "lg:grid-cols-5" : "lg:grid-cols-2"} gap-0`}>
+                className="group rounded-3xl border border-border/50 overflow-hidden hover:border-primary/30 transition-all duration-500 bg-background/40 backdrop-blur-2xl hover:bg-card/80 hover:shadow-[0_0_50px_rgba(59,130,246,0.15)] relative">
+                {/* Subtle gradient glow behind the card on hover */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                <div className={`grid ${i === 0 ? "lg:grid-cols-5" : "lg:grid-cols-2"} gap-0 relative z-10`}>
                   <div className={`${i === 0 ? "lg:col-span-3" : ""} relative overflow-hidden`}>
                     <img src={svc.image} alt={svc.title} className="w-full h-72 lg:h-[340px] object-cover group-hover:scale-[1.01] transition-transform duration-500 will-change-transform" loading="lazy" decoding="async" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />

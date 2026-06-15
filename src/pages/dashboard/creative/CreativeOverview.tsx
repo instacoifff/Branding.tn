@@ -10,38 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useI18n } from "@/i18n";
 import { toast } from "sonner";
+import { useCreativeProjects, type Task, type GroupedProject, type ProjectMessage, type CannedResponse } from "@/hooks/queries/useCreativeProjects";
 
-type Task = {
-    id: string;
-    title: string;
-    description: string | null;
-    status: "todo" | "doing" | "done";
-    project_id: string;
-    project?: { title: string };
-};
-
-type GroupedProject = {
-    id: string;
-    title: string;
-    creative_brief?: any;
-    tasks: Task[];
-    messages: ProjectMessage[];
-};
-
-type ProjectMessage = {
-    id: string;
-    sender_id: string;
-    project_id: string;
-    message: string;
-    created_at: string;
-    profiles?: { full_name: string; avatar_url: string };
-};
-
-type CannedResponse = {
-    id: string;
-    shortcut: string;
-    response_text: string;
-};
+// Types imported from useCreativeProjects
 
 const STATUS_LABELS: Record<Task["status"], string> = {
     todo: "To Do",
@@ -78,67 +49,18 @@ const CreativeOverview = () => {
         });
     }, [grouped]);
 
-    useEffect(() => {
-        const fetchCanned = async () => {
-            const { data } = await supabase.from("canned_responses").select("*").order("shortcut");
-            setCannedResponses(data || []);
-        };
-        fetchCanned();
-    }, []);
+    const { data, isLoading } = useCreativeProjects(user?.id);
 
     useEffect(() => {
-        const fetchMyProjects = async () => {
-            if (!user) return;
-
-            const { data: projectLinks } = await supabase
-                .from("project_creatives")
-                .select("projects(id, title, creative_brief, created_at, tasks(*), project_messages(*, profiles(full_name, avatar_url)))")
-                .eq("creative_id", user.id);
-
-            const projects = (projectLinks || [])
-                .map((link: any) => link.projects)
-                .filter(Boolean)
-                .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-            const mapped: GroupedProject[] = (projects || []).map((p: any) => ({
-                id: p.id,
-                title: p.title,
-                creative_brief: p.creative_brief,
-                tasks: p.tasks || [],
-                messages: p.project_messages?.sort((a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) || []
-            }));
-
-            // Fetch tasks assigned specifically to this user on projects they don't own
-            const { data: assignedTasks } = await supabase.from("tasks").select("*, projects(id, title, creative_brief)").eq("assigned_to", user.id);
-            if (assignedTasks && assignedTasks.length > 0) {
-                const extraProjIds = [...new Set(assignedTasks.map(t => t.project_id))].filter(id => !mapped.some(p => p.id === id));
-                
-                if (extraProjIds.length > 0) {
-                    const { data: rawMessages } = await supabase.from("project_messages").select("*, profiles(full_name, avatar_url)").in("project_id", extraProjIds).order("created_at", { ascending: true });
-                    const safeMsgs = rawMessages || [];
-
-                    assignedTasks.forEach((t: any) => {
-                        const existing = mapped.find(p => p.id === t.project_id);
-                        if (!existing && t.projects) {
-                            mapped.push({
-                                id: t.project_id,
-                                title: t.projects.title,
-                                creative_brief: t.projects.creative_brief,
-                                tasks: [t],
-                                messages: safeMsgs.filter(m => m.project_id === t.project_id) as any
-                            });
-                        } else if (existing && !existing.tasks.find(tk => tk.id === t.id)) {
-                            existing.tasks.push(t);
-                        }
-                    });
-                }
-            }
-
-            setGrouped(mapped);
+        if (data) {
+            setGrouped(data.groupedProjects);
+            setCannedResponses(data.cannedResponses);
             setLoading(false);
-        };
-        fetchMyProjects();
+        }
+    }, [data]);
 
+    useEffect(() => {
+        if (!user) return;
         const channel = supabase.channel(`creative_tasks_${user.id}`)
             .on("postgres_changes", { event: "UPDATE", schema: "public", table: "tasks" }, payload => {
                 setGrouped(prev => {
@@ -469,9 +391,13 @@ const CreativeOverview = () => {
                                                                             type="button"
                                                                             className="w-full text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors group"
                                                                             onClick={() => {
+                                                                                const parsedText = cr.response_text
+                                                                                    .replace(/\{\{project_name\}\}/g, pg.title)
+                                                                                    .replace(/\{\{creative_name\}\}/g, profile?.full_name || 'Creative');
+                                                                                    
                                                                                 setNewMessages(prev => ({
                                                                                     ...prev,
-                                                                                    [pg.id]: prev[pg.id] ? prev[pg.id] + ' ' + cr.response_text : cr.response_text
+                                                                                    [pg.id]: prev[pg.id] ? prev[pg.id] + ' ' + parsedText : parsedText
                                                                                 }));
                                                                                 setShowCanned(null);
                                                                             }}

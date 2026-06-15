@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, RotateCcw, Loader2, FileText, Image as ImageIcon, Film as FilmIcon, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -38,6 +39,15 @@ const DeliverableReviewOverlay = ({
   const [action, setAction] = useState<"approve" | "revise" | null>(null);
   const [revisionNote, setRevisionNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [pins, setPins] = useState<{x: number, y: number}[]>([]);
+
+  const handleImageClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (action !== "revise") return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setPins([...pins, { x, y }]);
+  };
 
   const previewType = getFilePreviewType(file.file_name);
 
@@ -75,13 +85,20 @@ const DeliverableReviewOverlay = ({
   };
 
   return (
-    <>
+    <AnimatePresence>
       {isOpen && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
           onClick={onClose}
         >
-          <div
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="relative w-full max-w-2xl max-h-[90vh] bg-card rounded-2xl border border-border shadow-2xl overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -107,13 +124,34 @@ const DeliverableReviewOverlay = ({
             </div>
 
             {/* Preview Area */}
-            <div className="flex-1 overflow-auto bg-muted/20 flex items-center justify-center p-6 min-h-[250px]">
+            <div className="flex-1 overflow-auto bg-muted/20 flex items-center justify-center p-6 min-h-[250px] relative">
               {previewType === "image" ? (
-                <img
-                  src={file.file_url}
-                  alt={file.file_name}
-                  className="max-h-[50vh] max-w-full object-contain rounded-lg shadow-lg"
-                />
+                <div 
+                  className={`relative inline-block ${action === 'revise' ? 'cursor-crosshair' : ''}`}
+                  onClick={handleImageClick}
+                >
+                  <img
+                    src={file.file_url}
+                    alt={file.file_name}
+                    className="max-h-[50vh] max-w-full object-contain rounded-lg shadow-lg"
+                  />
+                  {pins.map((pin, idx) => (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      key={idx}
+                      className="absolute w-6 h-6 -ml-3 -mt-3 bg-orange-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-[10px] text-white font-bold pointer-events-none"
+                      style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                    >
+                      {idx + 1}
+                    </motion.div>
+                  ))}
+                  {action === "revise" && pins.length === 0 && (
+                    <div className="absolute inset-x-0 bottom-4 text-center pointer-events-none">
+                      <span className="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm">Click anywhere on the image to drop a pin</span>
+                    </div>
+                  )}
+                </div>
               ) : previewType === "video" ? (
                 <video
                   src={file.file_url}
@@ -257,9 +295,9 @@ const DeliverableReviewOverlay = ({
               </div>
             )}
           </div>
-        </div>
+        </motion.div>
       )}
-    </>
+    </AnimatePresence>
   );
 };
 
