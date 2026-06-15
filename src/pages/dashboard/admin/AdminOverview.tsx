@@ -15,14 +15,7 @@ import {
     CartesianGrid,
 } from "recharts";
 
-type RecentProject = {
-    id: string;
-    title: string;
-    status: "onboarding" | "active" | "completed";
-    created_at: string;
-    total_price: number;
-    profiles: { full_name: string | null } | null;
-};
+
 
 const STATUS_COLORS: Record<string, string> = {
     onboarding: "#f97316",

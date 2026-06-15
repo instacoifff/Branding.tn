@@ -1,0 +1,113 @@
+{
+  "total_count": 1,
+  "jobs": [
+    {
+      "id": 81436041374,
+      "run_id": 27550756518,
+      "workflow_name": "CI",
+      "head_branch": "main",
+      "run_url": "https://api.github.com/repos/instacoifff/Branding.tn/actions/runs/27550756518",
+      "run_attempt": 1,
+      "node_id": "CR_kwDORTC_FM8AAAAS9fdgng",
+      "head_sha": "03fbb643ab65961274b45b337ed01166ec16de2c",
+      "url": "https://api.github.com/repos/instacoifff/Branding.tn/actions/jobs/81436041374",
+      "html_url": "https://github.com/instacoifff/Branding.tn/actions/runs/27550756518/job/81436041374",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-06-15T13:46:52Z",
+      "started_at": "2026-06-15T13:46:57Z",
+      "completed_at": "2026-06-15T13:47:19Z",
+      "name": "build-and-test",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-06-15T13:46:58Z",
+          "completed_at": "2026-06-15T13:46:59Z"
+        },
+        {
+          "name": "Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-06-15T13:46:59Z",
+          "completed_at": "2026-06-15T13:47:00Z"
+        },
+        {
+          "name": "Use Node.js 20",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-06-15T13:47:00Z",
+          "completed_at": "2026-06-15T13:47:04Z"
+        },
+        {
+          "name": "Install dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-06-15T13:47:04Z",
+          "completed_at": "2026-06-15T13:47:15Z"
+        },
+        {
+          "name": "Run Linter",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 5,
+          "started_at": "2026-06-15T13:47:15Z",
+          "completed_at": "2026-06-15T13:47:17Z"
+        },
+        {
+          "name": "Type Check",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-06-15T13:47:17Z",
+          "completed_at": "2026-06-15T13:47:17Z"
+        },
+        {
+          "name": "Build",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 7,
+          "started_at": "2026-06-15T13:47:17Z",
+          "completed_at": "2026-06-15T13:47:17Z"
+        },
+        {
+          "name": "Post Use Node.js 20",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-06-15T13:47:17Z",
+          "completed_at": "2026-06-15T13:47:17Z"
+        },
+        {
+          "name": "Post Run actions/checkout@v4",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 14,
+          "started_at": "2026-06-15T13:47:17Z",
+          "completed_at": "2026-06-15T13:47:17Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-06-15T13:47:17Z",
+          "completed_at": "2026-06-15T13:47:17Z"
+        }
+      ],
+      "check_run_url": "https://api.github.com/repos/instacoifff/Branding.tn/check-runs/81436041374",
+      "labels": [
+        "ubuntu-latest"
+      ],
+      "runner_id": 1000000002,
+      "runner_name": "GitHub Actions 1000000002",
+      "runner_group_id": 0,
+      "runner_group_name": "GitHub Actions"
+    }
+  ]
+}

@@ -16,7 +16,6 @@ import {
   MoreVertical,
   Trash2,
   Eye,
-  RotateCcw,
   Plus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
