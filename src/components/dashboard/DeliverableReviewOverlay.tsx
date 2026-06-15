@@ -294,7 +294,6 @@ const DeliverableReviewOverlay = ({
                 )}
               </div>
             )}
-          </div>
         </motion.div>
       )}
     </AnimatePresence>
